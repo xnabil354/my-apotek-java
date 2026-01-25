@@ -1,0 +1,120 @@
+<!doctype html>
+<html
+  xmlns:th="http://www.thymeleaf.org"
+  xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title th:text="${pageTitle} + ' - My Apotek'">
+      My Apotek Professional
+    </title>
+
+    <!-- Google Fonts: Inter -->
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <!-- FontAwesome for Icons -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <!-- Custom CSS -->
+    <link rel="stylesheet" th:href="@{/css/style.css}" />
+  </head>
+  <body>
+    <!-- Sidebar -->
+    <nav class="sidebar" id="sidebar">
+      <div class="brand">
+        <i class="fa-solid fa-hospital-user"></i> <span>MY APOTEK</span>
+      </div>
+
+      <a
+        th:href="@{/}"
+        class="nav-link"
+        th:classappend="${pageTitle == 'Beranda'} ? 'active'"
+      >
+        <i class="fa-solid fa-chart-line"></i> <span>Beranda</span>
+      </a>
+      <a
+        th:href="@{/inventory}"
+        class="nav-link"
+        th:classappend="${pageTitle == 'Manajemen Stok'} ? 'active'"
+      >
+        <i class="fa-solid fa-boxes-stacked"></i> <span>Stok Obat</span>
+      </a>
+      <a
+        th:href="@{/prescription}"
+        class="nav-link"
+        th:classappend="${pageTitle == 'Layanan Pasien'} ? 'active'"
+      >
+        <i class="fa-solid fa-user-doctor"></i> <span>Resep (CDSS)</span>
+      </a>
+      <a
+        th:href="@{/audit}"
+        class="nav-link"
+        th:classappend="${pageTitle == 'Audit Stok Opname'} ? 'active'"
+      >
+        <i class="fa-solid fa-scale-balanced"></i> <span>Audit (Opname)</span>
+      </a>
+      <a
+        th:href="@{/reports}"
+        class="nav-link"
+        th:classappend="${pageTitle == 'Laporan Sistem'} ? 'active'"
+      >
+        <i class="fa-solid fa-file-invoice"></i> <span>Laporan</span>
+      </a>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <header class="header">
+        <div style="display: flex; align-items: center; gap: 1rem">
+          <button class="mobile-toggle" onclick="toggleSidebar()">
+            <i class="fa-solid fa-bars"></i>
+          </button>
+          <h1 class="page-title" th:text="${pageTitle}">Ikhtisar</h1>
+        </div>
+        <div class="user-profile">
+          <span
+            style="
+              color: white;
+              background: var(--primary);
+              padding: 8px 16px;
+              border-radius: 30px;
+              font-size: 0.85rem;
+              font-weight: 600;
+              box-shadow: 0 4px 10px var(--primary-glow);
+            "
+          >
+            <i class="fa-solid fa-user-shield"></i> Mode Admin
+          </span>
+        </div>
+      </header>
+
+      <!-- Dynamic Content Injection -->
+      <div layout:fragment="content"></div>
+    </main>
+
+    <script>
+      function toggleSidebar() {
+        document.getElementById("sidebar").classList.toggle("show");
+      }
+
+      // Close sidebar when clicking outside on mobile
+      document.addEventListener("click", function (event) {
+        const sidebar = document.getElementById("sidebar");
+        const toggle = document.querySelector(".mobile-toggle");
+        if (
+          window.innerWidth <= 1024 &&
+          !sidebar.contains(event.target) &&
+          !toggle.contains(event.target) &&
+          sidebar.classList.contains("show")
+        ) {
+          sidebar.classList.remove("show");
+        }
+      });
+    </script>
+  </body>
+</html>

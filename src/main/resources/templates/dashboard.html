@@ -1,0 +1,91 @@
+<!doctype html>
+<html xmlns:th="http://www.thymeleaf.org" layout:decorate="~{layout}">
+  <body>
+    <div layout:fragment="content">
+      <div class="card">
+        <h3 style="margin-bottom: 0.5rem">
+          👋 Selamat Datang di My Apotek Professional
+        </h3>
+        <p style="color: var(--text-muted); font-size: 1.1rem">
+          Sistem Manajemen Apotek Terpadu. Gunakan menu di samping untuk
+          mengakses stok, layanan klinis, dan laporan.
+        </p>
+      </div>
+
+      <div class="stat-grid">
+        <!-- Medicines -->
+        <div class="card stat-card">
+          <div class="stat-icon" style="color: var(--primary)">
+            <i class="fa-solid fa-pills"></i>
+          </div>
+          <div class="stat-info">
+            <h4>Total Obat</h4>
+            <div class="value" th:text="${totalObat}">0</div>
+          </div>
+        </div>
+
+        <!-- Transactions -->
+        <div class="card stat-card">
+          <div class="stat-icon" style="color: var(--success)">
+            <i class="fa-solid fa-receipt"></i>
+          </div>
+          <div class="stat-info">
+            <h4>Transaksi Hari Ini</h4>
+            <div class="value" th:text="${transaksiHariIni}">0</div>
+          </div>
+        </div>
+
+        <!-- Alerts -->
+        <div class="card stat-card">
+          <div class="stat-icon" style="color: var(--accent)">
+            <i class="fa-solid fa-triangle-exclamation"></i>
+          </div>
+          <div class="stat-info">
+            <h4>Peringatan Kritis</h4>
+            <div class="value" th:text="${peringatanKritis}">0</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3 style="margin-bottom: 2rem">
+          <i class="fa-solid fa-clock-rotate-left"></i> Aktivitas Terbaru
+        </h3>
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Waktu</th>
+                <th>Aktivitas</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr th:each="act : ${recentActivities}">
+                <td th:text="${act.tglKunjungan}">10:45</td>
+                <td
+                  th:text="'Resep Keluar: ' + ${act.namaObat} + ' (' + ${act.namaPasien} + ')'"
+                >
+                  Aktivitas
+                </td>
+                <td>
+                  <span style="color: var(--success); font-weight: 600"
+                    >Berhasil</span
+                  >
+                </td>
+              </tr>
+              <tr th:if="${recentActivities.isEmpty()}">
+                <td
+                  colspan="3"
+                  style="text-align: center; color: var(--text-muted)"
+                >
+                  Belum ada aktivitas terbaru
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

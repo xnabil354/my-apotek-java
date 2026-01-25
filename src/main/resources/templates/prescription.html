@@ -1,0 +1,297 @@
+<!doctype html>
+<html xmlns:th="http://www.thymeleaf.org" layout:decorate="~{layout}">
+  <body>
+    <div layout:fragment="content">
+      <div class="card">
+        <h3
+          style="
+            margin-bottom: 2rem;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+          "
+        >
+          <i class="fa-solid fa-microscope"></i> Sistem Pendukung Keputusan
+          Klinis (CDSS)
+        </h3>
+
+        <!-- ALERTS -->
+        <div th:if="${message}" class="alert alert-success">
+          <i class="fa-solid fa-circle-check"></i>
+          <span th:text="${message}"></span>
+        </div>
+
+        <div
+          th:if="${warnings}"
+          class="alert alert-danger"
+          style="flex-direction: column; align-items: flex-start; gap: 0.5rem"
+        >
+          <div
+            style="
+              font-weight: 700;
+              display: flex;
+              align-items: center;
+              gap: 8px;
+            "
+          >
+            <i class="fa-solid fa-shield-virus"></i> PERINGATAN KEAMANAN
+            TERDETEKSI
+          </div>
+          <ul style="margin-left: 1.5rem; margin-top: 0.5rem">
+            <li th:each="w : ${warnings}" th:text="${w}"></li>
+          </ul>
+        </div>
+
+        <form
+          th:action="@{/prescription/check}"
+          th:object="${resep}"
+          method="post"
+        >
+          <div
+            style="
+              display: grid;
+              grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+              gap: 3rem;
+            "
+          >
+            <!-- COLUMN 1: PROFIL PASIEN -->
+            <div
+              class="card"
+              style="background: rgba(255, 255, 255, 0.4); box-shadow: none"
+            >
+              <h4
+                style="
+                  margin-bottom: 1.5rem;
+                  color: var(--text-dark);
+                  display: flex;
+                  align-items: center;
+                  gap: 10px;
+                "
+              >
+                <i class="fa-solid fa-user-tag"></i> 1. Profil Pasien
+              </h4>
+              <div class="form-group">
+                <label>NIK (ID Nasional)</label>
+                <input
+                  type="text"
+                  th:field="*{nik}"
+                  placeholder="Contoh: 3201..."
+                  required
+                />
+              </div>
+              <div class="form-group">
+                <label>Nama Lengkap</label>
+                <input
+                  type="text"
+                  th:field="*{namaPasien}"
+                  placeholder="Nama Sesuai KTP"
+                  required
+                />
+              </div>
+              <div
+                style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem"
+              >
+                <div class="form-group">
+                  <label>Usia (Tahun)</label>
+                  <input type="number" name="usia" value="25" required />
+                </div>
+                <div class="form-group">
+                  <label>Berat (Kg)</label>
+                  <input type="number" name="berat" value="60" required />
+                </div>
+              </div>
+              <div class="form-group">
+                <label>Riwayat Alergi</label>
+                <select name="riwayatAlergi" style="background: white">
+                  <option value="-">Tidak Ada Alergi</option>
+                  <option value="Antibiotik">Antibiotik</option>
+                  <option value="Aspirin">Aspirin</option>
+                  <option value="NSAID">NSAID</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- COLUMN 2: KONTEKS KLINIS -->
+            <div
+              class="card"
+              style="background: rgba(255, 255, 255, 0.4); box-shadow: none"
+            >
+              <h4
+                style="
+                  margin-bottom: 1.5rem;
+                  color: var(--text-dark);
+                  display: flex;
+                  align-items: center;
+                  gap: 10px;
+                "
+              >
+                <i class="fa-solid fa-file-medical"></i> 2. Konteks Klinis
+              </h4>
+              <div class="form-group">
+                <label>Diagnosis Utama</label>
+                <input
+                  type="text"
+                  th:field="*{diagnosa}"
+                  placeholder="Contoh: Hipertensi"
+                  required
+                />
+              </div>
+
+              <div class="form-group">
+                <label>Fungsi Ginjal (eGFR)</label>
+                <input
+                  type="number"
+                  name="gfr"
+                  placeholder="90"
+                  value="120"
+                  required
+                />
+                <div
+                  style="
+                    margin-top: 5px;
+                    font-size: 0.75rem;
+                    color: var(--text-muted);
+                  "
+                >
+                  <i class="fa-solid fa-info-circle"></i> Normal: > 90.
+                  Peringatan: < 60 (CKD Tahap 3)
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label>Obat Yang Sedang Dikonsumsi</label>
+                <input
+                  type="text"
+                  name="medikasiLain}"
+                  placeholder="Pisahkan dengan koma"
+                />
+              </div>
+
+              <div
+                style="
+                  background: #eff6ff;
+                  padding: 1.5rem;
+                  border-radius: 12px;
+                  border: 1px solid #bfdbfe;
+                  margin-top: 1rem;
+                "
+              >
+                <label
+                  style="
+                    color: #1d4ed8;
+                    font-weight: 800;
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                  "
+                >
+                  <i class="fa-solid fa-pills"></i> PILIH OBAT UNTUK DIBERIKAN
+                </label>
+                <select
+                  th:field="*{namaObat}"
+                  style="margin-top: 0.5rem; background: white"
+                >
+                  <option
+                    th:each="o : ${obatList}"
+                    th:value="${o.namaObat}"
+                    th:text="${o.namaObat} + ' (Stok: ' + ${o.quantity} + ')'"
+                  ></option>
+                </select>
+                <div
+                  class="form-group"
+                  style="margin-top: 1rem; margin-bottom: 0"
+                >
+                  <label style="font-size: 0.8rem">Dosis / Frekuensi</label>
+                  <input
+                    type="text"
+                    th:field="*{dosis}"
+                    placeholder="Misal: 500mg 3x1"
+                    style="background: white"
+                    required
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div
+            style="
+              margin-top: 3rem;
+              display: flex;
+              justify-content: flex-end;
+              gap: 1.5rem;
+              align-items: center;
+              flex-wrap: wrap;
+            "
+          >
+            <!-- HIDDEN INPUTS TO PRESERVE STATE DURING CONFIRMATION -->
+            <input
+              type="hidden"
+              name="riwayatAlergi"
+              th:value="${riwayatAlergi}"
+            />
+            <input type="hidden" name="gfr" th:value="${gfr}" />
+            <input
+              type="hidden"
+              name="medikasiLain"
+              th:value="${medikasiLain}"
+            />
+
+            <span style="font-size: 0.9rem; color: var(--text-muted)">
+              <i class="fa-solid fa-shield-halved"></i> Mesin Aturan AI Aktif
+            </span>
+
+            <!-- STEP 1: INITIAL CHECK -->
+            <button
+              th:if="${showConfirm == null}"
+              type="submit"
+              class="btn btn-primary"
+              style="
+                padding: 1rem 3rem;
+                font-size: 1.1rem;
+                border-radius: 50px;
+                min-width: 100%;
+              "
+            >
+              <i class="fa-solid fa-vial-circle-check"></i> CEK KEAMANAN KLINIS
+            </button>
+
+            <!-- STEP 2: CONFIRMATION -->
+            <div
+              th:if="${showConfirm}"
+              style="display: flex; gap: 1rem; width: 100%"
+            >
+              <a
+                th:href="@{/prescription}"
+                class="btn"
+                style="
+                  flex: 1;
+                  background: var(--secondary);
+                  color: white;
+                  border-radius: 50px;
+                  padding: 1rem;
+                  text-align: center;
+                "
+              >
+                <i class="fa-solid fa-rotate-left"></i> Batal
+              </a>
+              <button
+                type="submit"
+                name="confirm"
+                value="true"
+                class="btn"
+                th:style="${status == 'danger'} ? 'flex: 2; background: #dc2626; color: white; border-radius: 50px; padding: 1rem;' : 'flex: 2; background: #059669; color: white; border-radius: 50px; padding: 1rem;'"
+              >
+                <i class="fa-solid fa-circle-check"></i>
+                <span
+                  th:text="${status == 'danger'} ? 'TETAP BERIKAN OBAT (OVERRIDE)' : 'LANJUT BERIKAN OBAT'"
+                ></span>
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </body>
+</html>

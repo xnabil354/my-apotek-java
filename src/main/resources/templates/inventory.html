@@ -1,0 +1,366 @@
+<!doctype html>
+<html xmlns:th="http://www.thymeleaf.org" layout:decorate="~{layout}">
+  <body>
+    <div layout:fragment="content">
+      <div th:if="${message}" class="alert alert-success">
+        <i class="fa-solid fa-check-circle"></i>
+        <span th:text="${message}"></span>
+      </div>
+
+      <div
+        style="
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+          gap: 2.5rem;
+          align-items: start;
+        "
+      >
+        <!-- FORM: Tambah Obat -->
+        <div class="card" style="position: sticky; top: 2rem">
+          <h3 style="margin-bottom: 2rem; color: var(--primary)">
+            <i class="fa-solid fa-square-plus"></i> Obat Baru
+          </h3>
+          <form
+            th:action="@{/inventory/save}"
+            th:object="${newObat}"
+            method="post"
+          >
+            <div class="form-group">
+              <label
+                style="
+                  display: flex;
+                  justify-content: space-between;
+                  align-items: center;
+                "
+              >
+                <span><i class="fa-solid fa-barcode"></i> Barcode / SKU</span>
+                <button
+                  type="button"
+                  id="start-scanner"
+                  class="btn"
+                  style="
+                    padding: 2px 10px;
+                    font-size: 0.75rem;
+                    background: var(--primary);
+                    color: white;
+                  "
+                >
+                  <i class="fa-solid fa-camera"></i> Scan Kamera
+                </button>
+              </label>
+
+              <!-- Video Preview for Scanner -->
+              <div
+                id="scanner-container"
+                style="display: none; margin-bottom: 1rem; position: relative"
+              >
+                <!-- Device Selector -->
+                <select
+                  id="camera-select"
+                  style="
+                    position: absolute;
+                    top: 10px;
+                    left: 10px;
+                    width: auto;
+                    z-index: 10;
+                    padding: 4px;
+                    font-size: 0.7rem;
+                    background: rgba(255, 255, 255, 0.8);
+                    border-radius: 8px;
+                  "
+                >
+                  <option value="">Pilih Kamera...</option>
+                </select>
+
+                <video
+                  id="video"
+                  style="
+                    width: 100%;
+                    border-radius: 12px;
+                    border: 2px solid var(--primary);
+                  "
+                ></video>
+                <div
+                  style="
+                    position: absolute;
+                    top: 50%;
+                    left: 50%;
+                    transform: translate(-50%, -50%);
+                    width: 70%;
+                    height: 50%;
+                    border: 2px dashed rgba(60, 131, 246, 0.5);
+                    pointer-events: none;
+                  "
+                ></div>
+                <button
+                  type="button"
+                  id="stop-scanner"
+                  class="btn"
+                  style="
+                    position: absolute;
+                    top: 10px;
+                    right: 10px;
+                    background: rgba(220, 38, 38, 1);
+                    color: white;
+                    padding: 5px 12px;
+                    border-radius: 8px;
+                    z-index: 11;
+                    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+                  "
+                >
+                  <i class="fa-solid fa-xmark"></i>
+                </button>
+              </div>
+
+              <input
+                type="text"
+                id="barcode-input"
+                th:field="*{barcode}"
+                placeholder="Scan atau Ketik..."
+                required
+              />
+            </div>
+
+            <div class="form-group">
+              <label>Nama Obat</label>
+              <input
+                type="text"
+                th:field="*{namaObat}"
+                placeholder="Nama Obat Lengkap"
+                required
+              />
+            </div>
+
+            <div class="form-group">
+              <label>Nomor Batch</label>
+              <input
+                type="text"
+                th:field="*{nomorBatch}"
+                placeholder="Misal: B001"
+                required
+              />
+            </div>
+
+            <div
+              style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem"
+            >
+              <div class="form-group">
+                <label>Tgl Produksi</label>
+                <input type="date" th:field="*{tglProduksi}" required />
+              </div>
+              <div class="form-group">
+                <label>Tgl Kedaluwarsa</label>
+                <input type="date" th:field="*{tglExpired}" required />
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label>Supplier (Pemasok)</label>
+              <input
+                type="text"
+                th:field="*{supplier}"
+                placeholder="Nama Supplier"
+              />
+            </div>
+
+            <div
+              style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem"
+            >
+              <div class="form-group">
+                <label>Harga Beli (Rp)</label>
+                <input type="number" th:field="*{hargaBeli}" required />
+              </div>
+              <div class="form-group">
+                <label>Jumlah (Qty)</label>
+                <input type="number" th:field="*{quantity}" required />
+              </div>
+            </div>
+
+            <button
+              type="submit"
+              class="btn btn-primary"
+              style="width: 100%; margin-top: 1rem"
+            >
+              <i class="fa-solid fa-cloud-arrow-up"></i> Simpan ke Database
+            </button>
+          </form>
+        </div>
+
+        <!-- TABLE: Daftar Inventori -->
+        <div class="card">
+          <div
+            style="
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+              margin-bottom: 2rem;
+              flex-wrap: wrap;
+              gap: 1rem;
+            "
+          >
+            <h3 style="margin-bottom: 0">
+              <i class="fa-solid fa-boxes-stacked"></i> Stok Saat Ini
+            </h3>
+            <div class="stat-info" style="text-align: right">
+              <span style="font-size: 0.8rem; color: var(--text-muted)"
+                >TOTAL VARIANS:</span
+              >
+              <span
+                style="font-weight: 700; color: var(--primary)"
+                th:text="${obatList.size()}"
+                >0</span
+              >
+            </div>
+          </div>
+
+          <div class="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>SKU / Barcode</th>
+                  <th>Nama Obat</th>
+                  <th>Batch</th>
+                  <th>Kedaluwarsa</th>
+                  <th>Qty</th>
+                  <th>Harga</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr th:each="o : ${obatList}">
+                  <td
+                    style="
+                      font-family: monospace;
+                      color: var(--text-muted);
+                      font-size: 0.85rem;
+                    "
+                    th:text="${o.barcode}"
+                  ></td>
+                  <td style="font-weight: 600" th:text="${o.namaObat}"></td>
+                  <td
+                    th:text="${o.nomorBatch}"
+                    style="font-family: monospace"
+                  ></td>
+                  <td th:text="${o.tglExpired}"></td>
+                  <td style="font-weight: 700">
+                    <span th:text="${o.quantity}">50</span>
+                  </td>
+                  <td
+                    th:text="'Rp ' + ${#numbers.formatDecimal(o.hargaBeli, 0, 'COMMA', 0, 'POINT')}"
+                  ></td>
+                  <td>
+                    <span
+                      th:if="${o.quantity > 10}"
+                      style="
+                        background: #dcfce7;
+                        color: #166534;
+                        padding: 4px 10px;
+                        border-radius: 20px;
+                        font-size: 0.75rem;
+                        font-weight: 600;
+                      "
+                    >
+                      TERSEDIA
+                    </span>
+                    <span
+                      th:if="${o.quantity <= 10}"
+                      style="
+                        background: #fee2e2;
+                        color: #991b1b;
+                        padding: 4px 10px;
+                        border-radius: 20px;
+                        font-size: 0.75rem;
+                        font-weight: 600;
+                      "
+                    >
+                      STOK RENDAH
+                    </span>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Scanner Script inside context -->
+      <script src="https://unpkg.com/@zxing/library@latest"></script>
+      <script>
+        const codeReader = new ZXing.BrowserMultiFormatReader();
+        const startButton = document.getElementById("start-scanner");
+        const stopButton = document.getElementById("stop-scanner");
+        const scannerContainer = document.getElementById("scanner-container");
+        const barcodeInput = document.getElementById("barcode-input");
+        const videoElement = document.getElementById("video");
+        const cameraSelect = document.getElementById("camera-select");
+
+        let currentDeviceId = null;
+
+        startButton.onclick = async () => {
+          try {
+            const videoInputDevices = await codeReader.listVideoInputDevices();
+            if (videoInputDevices.length === 0) {
+              alert("Kamera tidak ditemukan!");
+              return;
+            }
+
+            // Fill select options
+            cameraSelect.innerHTML = "";
+            videoInputDevices.forEach((device) => {
+              const option = document.createElement("option");
+              option.value = device.deviceId;
+              option.text = device.label || `Camera ${cameraSelect.length + 1}`;
+              cameraSelect.appendChild(option);
+            });
+
+            // Auto-select back camera if possible
+            let selectedDeviceId = videoInputDevices[0].deviceId;
+            for (const device of videoInputDevices) {
+              if (device.label.toLowerCase().includes("back")) {
+                selectedDeviceId = device.deviceId;
+                break;
+              }
+            }
+            cameraSelect.value = selectedDeviceId;
+
+            startScanning(selectedDeviceId);
+          } catch (err) {
+            console.error(err);
+            alert("Gagal mengakses kamera: " + err);
+          }
+        };
+
+        cameraSelect.onchange = () => {
+          if (cameraSelect.value) {
+            codeReader.reset();
+            startScanning(cameraSelect.value);
+          }
+        };
+
+        function startScanning(deviceId) {
+          scannerContainer.style.display = "block";
+          startButton.style.display = "none";
+          currentDeviceId = deviceId;
+
+          codeReader.decodeFromVideoDevice(deviceId, "video", (result, err) => {
+            if (result) {
+              console.log(result.text);
+              barcodeInput.value = result.text;
+              stopScanner();
+              if (navigator.vibrate) navigator.vibrate(200);
+            }
+          });
+        }
+
+        stopButton.onclick = stopScanner;
+
+        function stopScanner() {
+          codeReader.reset();
+          scannerContainer.style.display = "none";
+          startButton.style.display = "block";
+          currentDeviceId = null;
+        }
+      </script>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,141 @@
+[INFO] Scanning for projects...
+[INFO] 
+[INFO] -----------------------< com.example:My-Apotek >------------------------
+[INFO] Building My Apotek01 0.0.1-SNAPSHOT
+[INFO]   from pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- clean:3.2.0:clean (default-clean) @ My-Apotek ---
+[INFO] Deleting C:\Users\nabil\OneDrive\Documents\STMI-Jakarta\java-apotek\target
+[INFO] 
+[INFO] --- resources:3.3.1:resources (default-resources) @ My-Apotek ---
+[INFO] Copying 1 resource from src\main\resources to target\classes
+[INFO] Copying 1 resource from src\main\resources to target\classes
+[INFO] 
+[INFO] --- compiler:3.11.0:compile (default-compile) @ My-Apotek ---
+[INFO] Changes detected - recompiling the module! :source
+[INFO] Compiling 7 source files with javac [debug release 17] to target\classes
+[INFO] Some messages have been simplified; recompile with -Xdiags:verbose to get full output
+[INFO] -------------------------------------------------------------
+[ERROR] COMPILATION ERROR : 
+[INFO] -------------------------------------------------------------
+[ERROR] /C:/Users/nabil/OneDrive/Documents/STMI-Jakarta/java-apotek/src/main/java/com/example/My/Apotek/MyApotekApp.java:[53,56] cannot find symbol
+  symbol:   variable PLAIN
+  location: class com.lowagie.text.Font
+[ERROR] /C:/Users/nabil/OneDrive/Documents/STMI-Jakarta/java-apotek/src/main/java/com/example/My/Apotek/MyApotekApp.java:[56,42] no suitable constructor found for Font(java.lang.String,int,int)
+    constructor com.lowagie.text.Font.Font(com.lowagie.text.pdf.BaseFont,float,int) is not applicable
+      (argument mismatch; java.lang.String cannot be converted to com.lowagie.text.pdf.BaseFont)
+    constructor com.lowagie.text.Font.Font(int,float,int) is not applicable
+      (argument mismatch; java.lang.String cannot be converted to int)
+[ERROR] /C:/Users/nabil/OneDrive/Documents/STMI-Jakarta/java-apotek/src/main/java/com/example/My/Apotek/MyApotekApp.java:[57,46] no suitable constructor found for Font(java.lang.String,int,int)
+    constructor com.lowagie.text.Font.Font(com.lowagie.text.pdf.BaseFont,float,int) is not applicable
+      (argument mismatch; java.lang.String cannot be converted to com.lowagie.text.pdf.BaseFont)
+    constructor com.lowagie.text.Font.Font(int,float,int) is not applicable
+      (argument mismatch; java.lang.String cannot be converted to int)
+[ERROR] /C:/Users/nabil/OneDrive/Documents/STMI-Jakarta/java-apotek/src/main/java/com/example/My/Apotek/MyApotekApp.java:[81,24] no suitable constructor found for Font(java.lang.String,int,int)
+    constructor com.lowagie.text.Font.Font(com.lowagie.text.pdf.BaseFont,float,int) is not applicable
+      (argument mismatch; java.lang.String cannot be converted to com.lowagie.text.pdf.BaseFont)
+    constructor com.lowagie.text.Font.Font(int,float,int) is not applicable
+      (argument mismatch; java.lang.String cannot be converted to int)
+[ERROR] /C:/Users/nabil/OneDrive/Documents/STMI-Jakarta/java-apotek/src/main/java/com/example/My/Apotek/MyApotekApp.java:[96,25] no suitable constructor found for Font(java.lang.String,int,int)
+    constructor com.lowagie.text.Font.Font(com.lowagie.text.pdf.BaseFont,float,int) is not applicable
+      (argument mismatch; java.lang.String cannot be converted to com.lowagie.text.pdf.BaseFont)
+    constructor com.lowagie.text.Font.Font(int,float,int) is not applicable
+      (argument mismatch; java.lang.String cannot be converted to int)
+[ERROR] /C:/Users/nabil/OneDrive/Documents/STMI-Jakarta/java-apotek/src/main/java/com/example/My/Apotek/MyApotekApp.java:[99,32] no suitable constructor found for Font(java.lang.String,int,int)
+    constructor com.lowagie.text.Font.Font(com.lowagie.text.pdf.BaseFont,float,int) is not applicable
+      (argument mismatch; java.lang.String cannot be converted to com.lowagie.text.pdf.BaseFont)
+    constructor com.lowagie.text.Font.Font(int,float,int) is not applicable
+      (argument mismatch; java.lang.String cannot be converted to int)
+[ERROR] /C:/Users/nabil/OneDrive/Documents/STMI-Jakarta/java-apotek/src/main/java/com/example/My/Apotek/MyApotekApp.java:[152,24] no suitable constructor found for Font(java.lang.String,int,int)
+    constructor com.lowagie.text.Font.Font(com.lowagie.text.pdf.BaseFont,float,int) is not applicable
+      (argument mismatch; java.lang.String cannot be converted to com.lowagie.text.pdf.BaseFont)
+    constructor com.lowagie.text.Font.Font(int,float,int) is not applicable
+      (argument mismatch; java.lang.String cannot be converted to int)
+[ERROR] /C:/Users/nabil/OneDrive/Documents/STMI-Jakarta/java-apotek/src/main/java/com/example/My/Apotek/MyApotekApp.java:[277,26] no suitable constructor found for Font(java.lang.String,int,int)
+    constructor com.lowagie.text.Font.Font(com.lowagie.text.pdf.BaseFont,float,int) is not applicable
+      (argument mismatch; java.lang.String cannot be converted to com.lowagie.text.pdf.BaseFont)
+    constructor com.lowagie.text.Font.Font(int,float,int) is not applicable
+      (argument mismatch; java.lang.String cannot be converted to int)
+[ERROR] /C:/Users/nabil/OneDrive/Documents/STMI-Jakarta/java-apotek/src/main/java/com/example/My/Apotek/MyApotekApp.java:[375,52] cannot find symbol
+  symbol:   variable PLAIN
+  location: class com.lowagie.text.Font
+[ERROR] /C:/Users/nabil/OneDrive/Documents/STMI-Jakarta/java-apotek/src/main/java/com/example/My/Apotek/MyApotekApp.java:[393,25] no suitable constructor found for Font(java.lang.String,int,int)
+    constructor com.lowagie.text.Font.Font(com.lowagie.text.pdf.BaseFont,float,int) is not applicable
+      (argument mismatch; java.lang.String cannot be converted to com.lowagie.text.pdf.BaseFont)
+    constructor com.lowagie.text.Font.Font(int,float,int) is not applicable
+      (argument mismatch; java.lang.String cannot be converted to int)
+[ERROR] /C:/Users/nabil/OneDrive/Documents/STMI-Jakarta/java-apotek/src/main/java/com/example/My/Apotek/MyApotekApp.java:[402,44] cannot find symbol
+  symbol:   variable PLAIN
+  location: class com.lowagie.text.Font
+[ERROR] /C:/Users/nabil/OneDrive/Documents/STMI-Jakarta/java-apotek/src/main/java/com/example/My/Apotek/MyApotekApp.java:[420,45] cannot find symbol
+  symbol:   variable PLAIN
+  location: class com.lowagie.text.Font
+[INFO] 12 errors 
+[INFO] -------------------------------------------------------------
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD FAILURE
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  4.836 s
+[INFO] Finished at: 2026-01-25T20:49:01+07:00
+[INFO] ------------------------------------------------------------------------
+[ERROR] Failed to execute goal org.apache.maven.plugins:maven-compiler-plugin:3.11.0:compile (default-compile) on project My-Apotek: Compilation failure: Compilation failure: 
+[ERROR] /C:/Users/nabil/OneDrive/Documents/STMI-Jakarta/java-apotek/src/main/java/com/example/My/Apotek/MyApotekApp.java:[53,56] cannot find symbol
+[ERROR]   symbol:   variable PLAIN
+[ERROR]   location: class com.lowagie.text.Font
+[ERROR] /C:/Users/nabil/OneDrive/Documents/STMI-Jakarta/java-apotek/src/main/java/com/example/My/Apotek/MyApotekApp.java:[56,42] no suitable constructor found for Font(java.lang.String,int,int)
+[ERROR]     constructor com.lowagie.text.Font.Font(com.lowagie.text.pdf.BaseFont,float,int) is not applicable
+[ERROR]       (argument mismatch; java.lang.String cannot be converted to com.lowagie.text.pdf.BaseFont)
+[ERROR]     constructor com.lowagie.text.Font.Font(int,float,int) is not applicable
+[ERROR]       (argument mismatch; java.lang.String cannot be converted to int)
+[ERROR] /C:/Users/nabil/OneDrive/Documents/STMI-Jakarta/java-apotek/src/main/java/com/example/My/Apotek/MyApotekApp.java:[57,46] no suitable constructor found for Font(java.lang.String,int,int)
+[ERROR]     constructor com.lowagie.text.Font.Font(com.lowagie.text.pdf.BaseFont,float,int) is not applicable
+[ERROR]       (argument mismatch; java.lang.String cannot be converted to com.lowagie.text.pdf.BaseFont)
+[ERROR]     constructor com.lowagie.text.Font.Font(int,float,int) is not applicable
+[ERROR]       (argument mismatch; java.lang.String cannot be converted to int)
+[ERROR] /C:/Users/nabil/OneDrive/Documents/STMI-Jakarta/java-apotek/src/main/java/com/example/My/Apotek/MyApotekApp.java:[81,24] no suitable constructor found for Font(java.lang.String,int,int)
+[ERROR]     constructor com.lowagie.text.Font.Font(com.lowagie.text.pdf.BaseFont,float,int) is not applicable
+[ERROR]       (argument mismatch; java.lang.String cannot be converted to com.lowagie.text.pdf.BaseFont)
+[ERROR]     constructor com.lowagie.text.Font.Font(int,float,int) is not applicable
+[ERROR]       (argument mismatch; java.lang.String cannot be converted to int)
+[ERROR] /C:/Users/nabil/OneDrive/Documents/STMI-Jakarta/java-apotek/src/main/java/com/example/My/Apotek/MyApotekApp.java:[96,25] no suitable constructor found for Font(java.lang.String,int,int)
+[ERROR]     constructor com.lowagie.text.Font.Font(com.lowagie.text.pdf.BaseFont,float,int) is not applicable
+[ERROR]       (argument mismatch; java.lang.String cannot be converted to com.lowagie.text.pdf.BaseFont)
+[ERROR]     constructor com.lowagie.text.Font.Font(int,float,int) is not applicable
+[ERROR]       (argument mismatch; java.lang.String cannot be converted to int)
+[ERROR] /C:/Users/nabil/OneDrive/Documents/STMI-Jakarta/java-apotek/src/main/java/com/example/My/Apotek/MyApotekApp.java:[99,32] no suitable constructor found for Font(java.lang.String,int,int)
+[ERROR]     constructor com.lowagie.text.Font.Font(com.lowagie.text.pdf.BaseFont,float,int) is not applicable
+[ERROR]       (argument mismatch; java.lang.String cannot be converted to com.lowagie.text.pdf.BaseFont)
+[ERROR]     constructor com.lowagie.text.Font.Font(int,float,int) is not applicable
+[ERROR]       (argument mismatch; java.lang.String cannot be converted to int)
+[ERROR] /C:/Users/nabil/OneDrive/Documents/STMI-Jakarta/java-apotek/src/main/java/com/example/My/Apotek/MyApotekApp.java:[152,24] no suitable constructor found for Font(java.lang.String,int,int)
+[ERROR]     constructor com.lowagie.text.Font.Font(com.lowagie.text.pdf.BaseFont,float,int) is not applicable
+[ERROR]       (argument mismatch; java.lang.String cannot be converted to com.lowagie.text.pdf.BaseFont)
+[ERROR]     constructor com.lowagie.text.Font.Font(int,float,int) is not applicable
+[ERROR]       (argument mismatch; java.lang.String cannot be converted to int)
+[ERROR] /C:/Users/nabil/OneDrive/Documents/STMI-Jakarta/java-apotek/src/main/java/com/example/My/Apotek/MyApotekApp.java:[277,26] no suitable constructor found for Font(java.lang.String,int,int)
+[ERROR]     constructor com.lowagie.text.Font.Font(com.lowagie.text.pdf.BaseFont,float,int) is not applicable
+[ERROR]       (argument mismatch; java.lang.String cannot be converted to com.lowagie.text.pdf.BaseFont)
+[ERROR]     constructor com.lowagie.text.Font.Font(int,float,int) is not applicable
+[ERROR]       (argument mismatch; java.lang.String cannot be converted to int)
+[ERROR] /C:/Users/nabil/OneDrive/Documents/STMI-Jakarta/java-apotek/src/main/java/com/example/My/Apotek/MyApotekApp.java:[375,52] cannot find symbol
+[ERROR]   symbol:   variable PLAIN
+[ERROR]   location: class com.lowagie.text.Font
+[ERROR] /C:/Users/nabil/OneDrive/Documents/STMI-Jakarta/java-apotek/src/main/java/com/example/My/Apotek/MyApotekApp.java:[393,25] no suitable constructor found for Font(java.lang.String,int,int)
+[ERROR]     constructor com.lowagie.text.Font.Font(com.lowagie.text.pdf.BaseFont,float,int) is not applicable
+[ERROR]       (argument mismatch; java.lang.String cannot be converted to com.lowagie.text.pdf.BaseFont)
+[ERROR]     constructor com.lowagie.text.Font.Font(int,float,int) is not applicable
+[ERROR]       (argument mismatch; java.lang.String cannot be converted to int)
+[ERROR] /C:/Users/nabil/OneDrive/Documents/STMI-Jakarta/java-apotek/src/main/java/com/example/My/Apotek/MyApotekApp.java:[402,44] cannot find symbol
+[ERROR]   symbol:   variable PLAIN
+[ERROR]   location: class com.lowagie.text.Font
+[ERROR] /C:/Users/nabil/OneDrive/Documents/STMI-Jakarta/java-apotek/src/main/java/com/example/My/Apotek/MyApotekApp.java:[420,45] cannot find symbol
+[ERROR]   symbol:   variable PLAIN
+[ERROR]   location: class com.lowagie.text.Font
+[ERROR] -> [Help 1]
+[ERROR] 
+[ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.
+[ERROR] Re-run Maven using the -X switch to enable full debug logging.
+[ERROR] 
+[ERROR] For more information about the errors and possible solutions, please read the following articles:
+[ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/MojoFailureException
