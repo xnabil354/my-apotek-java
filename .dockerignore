@@ -1,0 +1,17 @@
+target/
+.mvn/
+mvnw
+mvnw.cmd
+.git/
+.gitignore
+.idea/
+.vscode/
+*.iml
+HELP.md
+*.pdf
+*.log
+*.txt
+*.ps1
+data/
+staging/
+dist_v5/

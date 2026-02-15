@@ -1,0 +1,18 @@
+services:
+  - type: web
+    name: my-apotek
+    env: docker
+    plan: free # Change to starter or higher for production reliability
+    region: singapore # Choose a region close to your users
+    branch: main # Or your default branch
+    disk:
+      name: apotek-data
+      mountPath: /app/data
+      sizeGB: 1
+    envVars:
+      - key: PORT
+        value: 8081
+    healthCheckPath: /actuator/health
+    autoDeploy: true
+
+version: "1"
