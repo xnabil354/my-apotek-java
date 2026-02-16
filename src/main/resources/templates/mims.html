@@ -1,0 +1,162 @@
+<!doctype html>
+<html xmlns:th="http://www.thymeleaf.org" layout:decorate="~{layout}">
+  <body>
+    <div layout:fragment="content">
+      <div class="card">
+        <h3
+          style="
+            margin-bottom: 0.5rem;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+          "
+        >
+          <i class="fa-solid fa-book-medical"></i> MIMS Apotek
+        </h3>
+        <p
+          style="
+            color: var(--text-muted);
+            margin-bottom: 2rem;
+            font-size: 1.05rem;
+          "
+        >
+          Referensi obat terdaftar: indikasi, kegunaan, golongan, dan informasi
+          harga.
+        </p>
+<form th:action="@{/mims}" method="get" style="margin-bottom: 2rem">
+          <div style="display: flex; gap: 1rem; flex-wrap: wrap">
+            <input
+              type="text"
+              name="keyword"
+              th:value="${keyword}"
+              placeholder="Cari obat berdasarkan nama..."
+              style="
+                flex: 1;
+                min-width: 200px;
+                height: 50px;
+                border-radius: 14px;
+                padding: 0 1.5rem;
+                font-size: 1rem;
+              "
+            />
+            <button
+              type="submit"
+              class="btn btn-primary"
+              style="
+                height: 50px;
+                border-radius: 14px;
+                padding: 0 2rem;
+                white-space: nowrap;
+              "
+            >
+              <i class="fa-solid fa-magnifying-glass"></i> Cari
+            </button>
+            <a
+              th:href="@{/mims}"
+              class="btn btn-secondary"
+              style="
+                height: 50px;
+                border-radius: 14px;
+                padding: 0 2rem;
+                text-decoration: none;
+                display: flex;
+                align-items: center;
+                white-space: nowrap;
+              "
+            >
+              <i class="fa-solid fa-rotate-left"></i> Reset
+            </a>
+          </div>
+        </form>
+
+        <div th:if="${keyword}" class="alert alert-success">
+          <i class="fa-solid fa-magnifying-glass"></i>
+          Menampilkan hasil pencarian: "<span th:text="${keyword}"></span>" —
+          ditemukan <b th:text="${obatList.size()}"></b> obat
+        </div>
+<div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Nama Obat</th>
+                <th>Golongan</th>
+                <th>Satuan</th>
+                <th>Indikasi / Kegunaan</th>
+                <th>H. Jual Apotek</th>
+                <th>H. Plot</th>
+                <th>Stok</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr th:each="obat : ${obatList}">
+                <td style="font-weight: 700" th:text="${obat.namaObat}">-</td>
+                <td>
+                  <span
+                    th:if="${obat.golongan != null}"
+                    th:text="${obat.golongan}"
+                    style="
+                      background: #e0e7ff;
+                      color: #3730a3;
+                      padding: 4px 10px;
+                      border-radius: 8px;
+                      font-size: 0.8rem;
+                      font-weight: 600;
+                    "
+                  >
+                  </span>
+                  <span
+                    th:if="${obat.golongan == null}"
+                    style="color: var(--text-muted)"
+                    >-</span
+                  >
+                </td>
+                <td th:text="${obat.satuan ?: '-'}">-</td>
+                <td
+                  style="
+                    max-width: 300px;
+                    font-size: 0.88rem;
+                    color: var(--text-muted);
+                  "
+                  th:text="${obat.indikasi ?: 'Belum ada data indikasi'}"
+                >
+                  -
+                </td>
+                <td
+                  style="font-weight: 600"
+                  th:text="${obat.hargaJualApotek != null ? 'Rp ' + #numbers.formatDecimal(obat.hargaJualApotek, 0, 'COMMA', 0, 'POINT') : '-'}"
+                >
+                  -
+                </td>
+                <td
+                  th:text="${obat.hargaPlot != null ? 'Rp ' + #numbers.formatDecimal(obat.hargaPlot, 0, 'COMMA', 0, 'POINT') : '-'}"
+                >
+                  -
+                </td>
+                <td>
+                  <span
+                    th:text="${obat.quantity}"
+                    th:style="${obat.quantity != null && obat.quantity < 10 ? 'color: var(--accent); font-weight: 800' : 'font-weight: 600'}"
+                    >0</span
+                  >
+                </td>
+              </tr>
+              <tr th:if="${obatList.isEmpty()}">
+                <td
+                  colspan="7"
+                  style="
+                    text-align: center;
+                    color: var(--text-muted);
+                    padding: 2rem;
+                  "
+                >
+                  Tidak ada obat ditemukan
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

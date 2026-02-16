@@ -8,6 +8,13 @@ public class PrescriptionRequest {
     private int usia;
     private String riwayatAlergi;
     private String namaObat;
-    private double dosis;
+    private String dosis;
     private double beratBadan;
+    private String namaDokter;
+    private String noPraktek;
+    private String namaRumahSakit;
+    private double hargaObat;
+    private int jumlahObat;
+    private double tuslah;
+    private double embalase;
 }

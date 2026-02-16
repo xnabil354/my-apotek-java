@@ -2,363 +2,305 @@
 <html xmlns:th="http://www.thymeleaf.org" layout:decorate="~{layout}">
   <body>
     <div layout:fragment="content">
-      <div th:if="${message}" class="alert alert-success">
-        <i class="fa-solid fa-check-circle"></i>
-        <span th:text="${message}"></span>
-      </div>
+      <div class="card">
+        <h3
+          style="
+            margin-bottom: 0.5rem;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+          "
+        >
+          <i class="fa-solid fa-boxes-stacked"></i> Inventory Obat
+        </h3>
+        <p
+          style="
+            color: var(--text-muted);
+            margin-bottom: 2rem;
+            font-size: 1.05rem;
+          "
+        >
+          Kelola stok obat dengan sistem faktur dan multi-harga.
+        </p>
 
-      <div
-        style="
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-          gap: 2.5rem;
-          align-items: start;
-        "
-      >
-        <!-- FORM: Tambah Obat -->
-        <div class="card" style="position: sticky; top: 2rem">
-          <h3 style="margin-bottom: 2rem; color: var(--primary)">
-            <i class="fa-solid fa-square-plus"></i> Obat Baru
-          </h3>
-          <form
-            th:action="@{/inventory/save}"
-            th:object="${newObat}"
-            method="post"
-          >
+        <div th:if="${success}" class="alert alert-success">
+          <i class="fa-solid fa-circle-check"></i>
+          <span th:text="${success}"></span>
+        </div>
+        <div th:if="${error}" class="alert alert-danger">
+          <i class="fa-solid fa-circle-xmark"></i>
+          <span th:text="${error}"></span>
+        </div>
+<form
+          th:action="@{/inventory/add}"
+          th:object="${newObat}"
+          method="post"
+        >
+          <div class="form-grid">
             <div class="form-group">
-              <label
-                style="
-                  display: flex;
-                  justify-content: space-between;
-                  align-items: center;
-                "
-              >
-                <span><i class="fa-solid fa-barcode"></i> Barcode / SKU</span>
-                <button
-                  type="button"
-                  id="start-scanner"
-                  class="btn"
-                  style="
-                    padding: 2px 10px;
-                    font-size: 0.75rem;
-                    background: var(--primary);
-                    color: white;
-                  "
-                >
-                  <i class="fa-solid fa-camera"></i> Scan Kamera
-                </button>
-              </label>
-
-              <!-- Video Preview for Scanner -->
-              <div
-                id="scanner-container"
-                style="display: none; margin-bottom: 1rem; position: relative"
-              >
-                <!-- Device Selector -->
-                <select
-                  id="camera-select"
-                  style="
-                    position: absolute;
-                    top: 10px;
-                    left: 10px;
-                    width: auto;
-                    z-index: 10;
-                    padding: 4px;
-                    font-size: 0.7rem;
-                    background: rgba(255, 255, 255, 0.8);
-                    border-radius: 8px;
-                  "
-                >
-                  <option value="">Pilih Kamera...</option>
-                </select>
-
-                <video
-                  id="video"
-                  style="
-                    width: 100%;
-                    border-radius: 12px;
-                    border: 2px solid var(--primary);
-                  "
-                ></video>
-                <div
-                  style="
-                    position: absolute;
-                    top: 50%;
-                    left: 50%;
-                    transform: translate(-50%, -50%);
-                    width: 70%;
-                    height: 50%;
-                    border: 2px dashed rgba(60, 131, 246, 0.5);
-                    pointer-events: none;
-                  "
-                ></div>
-                <button
-                  type="button"
-                  id="stop-scanner"
-                  class="btn"
-                  style="
-                    position: absolute;
-                    top: 10px;
-                    right: 10px;
-                    background: rgba(220, 38, 38, 1);
-                    color: white;
-                    padding: 5px 12px;
-                    border-radius: 8px;
-                    z-index: 11;
-                    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-                  "
-                >
-                  <i class="fa-solid fa-xmark"></i>
-                </button>
-              </div>
-
-              <input
-                type="text"
-                id="barcode-input"
-                th:field="*{barcode}"
-                placeholder="Scan atau Ketik..."
-                required
-              />
-            </div>
-
-            <div class="form-group">
-              <label>Nama Obat</label>
+              <label><i class="fa-solid fa-tag"></i> Nama Obat</label>
               <input
                 type="text"
                 th:field="*{namaObat}"
-                placeholder="Nama Obat Lengkap"
+                placeholder="Nama obat..."
                 required
               />
             </div>
-
             <div class="form-group">
-              <label>Nomor Batch</label>
+              <label><i class="fa-solid fa-file-invoice"></i> No Faktur</label>
+              <input
+                type="text"
+                th:field="*{noFaktur}"
+                placeholder="No faktur pembelian..."
+                required
+              />
+            </div>
+            <div class="form-group">
+              <label><i class="fa-solid fa-hashtag"></i> Nomor Batch</label>
               <input
                 type="text"
                 th:field="*{nomorBatch}"
-                placeholder="Misal: B001"
-                required
+                placeholder="Nomor batch..."
               />
             </div>
-
-            <div
-              style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem"
-            >
-              <div class="form-group">
-                <label>Tgl Produksi</label>
-                <input type="date" th:field="*{tglProduksi}" required />
-              </div>
-              <div class="form-group">
-                <label>Tgl Kedaluwarsa</label>
-                <input type="date" th:field="*{tglExpired}" required />
-              </div>
-            </div>
-
             <div class="form-group">
-              <label>Supplier (Pemasok)</label>
+              <label><i class="fa-solid fa-building"></i> Nama PBF</label>
+              <input
+                type="text"
+                th:field="*{namaPBF}"
+                placeholder="Pedagang Besar Farmasi..."
+              />
+            </div>
+            <div class="form-group">
+              <label><i class="fa-solid fa-calendar"></i> Tgl Produksi</label>
+              <input type="date" th:field="*{tglProduksi}" />
+            </div>
+            <div class="form-group">
+              <label
+                ><i class="fa-solid fa-calendar-xmark"></i> Tgl Expired</label
+              >
+              <input type="date" th:field="*{tglExpired}" />
+            </div>
+            <div class="form-group">
+              <label><i class="fa-solid fa-truck"></i> Supplier</label>
               <input
                 type="text"
                 th:field="*{supplier}"
-                placeholder="Nama Supplier"
+                placeholder="Supplier..."
               />
             </div>
-
-            <div
-              style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem"
-            >
-              <div class="form-group">
-                <label>Harga Beli (Rp)</label>
-                <input type="number" th:field="*{hargaBeli}" required />
-              </div>
-              <div class="form-group">
-                <label>Jumlah (Qty)</label>
-                <input type="number" th:field="*{quantity}" required />
-              </div>
+            <div class="form-group">
+              <label><i class="fa-solid fa-ruler"></i> Satuan</label>
+              <input
+                type="text"
+                th:field="*{satuan}"
+                placeholder="Tab/Kapsul/Strip/Botol..."
+              />
             </div>
-
-            <button
-              type="submit"
-              class="btn btn-primary"
-              style="width: 100%; margin-top: 1rem"
-            >
-              <i class="fa-solid fa-cloud-arrow-up"></i> Simpan ke Database
-            </button>
-          </form>
-        </div>
-
-        <!-- TABLE: Daftar Inventori -->
-        <div class="card">
-          <div
+            <div class="form-group">
+              <label
+                ><i class="fa-solid fa-layer-group"></i> Golongan Obat</label
+              >
+              <select th:field="*{golongan}">
+                <option value="">-- Pilih Golongan --</option>
+                <option value="Obat Bebas">Obat Bebas</option>
+                <option value="Obat Bebas Terbatas">Obat Bebas Terbatas</option>
+                <option value="Obat Keras">Obat Keras</option>
+                <option value="Obat Narkotika">Obat Narkotika</option>
+                <option value="Obat Psikotropika">Obat Psikotropika</option>
+                <option value="Obat Herbal">Obat Herbal</option>
+                <option value="Suplemen">Suplemen</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label><i class="fa-solid fa-cubes"></i> Quantity</label>
+              <input
+                type="number"
+                th:field="*{quantity}"
+                placeholder="Jumlah..."
+                required
+                min="1"
+              />
+            </div>
+          </div>
+<div
+            class="card"
             style="
-              display: flex;
-              justify-content: space-between;
-              align-items: center;
-              margin-bottom: 2rem;
-              flex-wrap: wrap;
-              gap: 1rem;
+              background: #f0fdf4;
+              border: 2px solid #bbf7d0;
+              margin-top: 1rem;
             "
           >
-            <h3 style="margin-bottom: 0">
-              <i class="fa-solid fa-boxes-stacked"></i> Stok Saat Ini
-            </h3>
-            <div class="stat-info" style="text-align: right">
-              <span style="font-size: 0.8rem; color: var(--text-muted)"
-                >TOTAL VARIANS:</span
-              >
-              <span
-                style="font-weight: 700; color: var(--primary)"
-                th:text="${obatList.size()}"
-                >0</span
-              >
+            <h4 style="color: #166534; margin-bottom: 1rem; font-size: 0.95rem">
+              <i class="fa-solid fa-money-bills"></i> PRICING (Multi-Harga)
+            </h4>
+            <div class="form-grid">
+              <div class="form-group">
+                <label>Harga Beli (Rp)</label>
+                <input
+                  type="number"
+                  th:field="*{hargaBeli}"
+                  id="hargaBeli"
+                  placeholder="0"
+                  step="0.01"
+                  oninput="calcPPN()"
+                />
+              </div>
+              <div class="form-group">
+                <label>Harga Beli + PPN 11% (Rp)</label>
+                <input
+                  type="number"
+                  th:field="*{hargaBeliPpn}"
+                  id="hargaBeliPpn"
+                  placeholder="Auto-calculated"
+                  readonly
+                  style="background: #e2e8f0; font-weight: 700"
+                />
+              </div>
+              <div class="form-group">
+                <label>Harga Jual Apotek (Rp)</label>
+                <input
+                  type="number"
+                  th:field="*{hargaJualApotek}"
+                  placeholder="0"
+                  step="0.01"
+                />
+              </div>
+              <div class="form-group">
+                <label>Harga Plot (Rp)</label>
+                <input
+                  type="number"
+                  th:field="*{hargaPlot}"
+                  placeholder="0"
+                  step="0.01"
+                />
+              </div>
             </div>
           </div>
-
-          <div class="table-container">
-            <table>
-              <thead>
-                <tr>
-                  <th>SKU / Barcode</th>
-                  <th>Nama Obat</th>
-                  <th>Batch</th>
-                  <th>Kedaluwarsa</th>
-                  <th>Qty</th>
-                  <th>Harga</th>
-                  <th>Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr th:each="o : ${obatList}">
-                  <td
-                    style="
-                      font-family: monospace;
-                      color: var(--text-muted);
-                      font-size: 0.85rem;
-                    "
-                    th:text="${o.barcode}"
-                  ></td>
-                  <td style="font-weight: 600" th:text="${o.namaObat}"></td>
-                  <td
-                    th:text="${o.nomorBatch}"
-                    style="font-family: monospace"
-                  ></td>
-                  <td th:text="${o.tglExpired}"></td>
-                  <td style="font-weight: 700">
-                    <span th:text="${o.quantity}">50</span>
-                  </td>
-                  <td
-                    th:text="'Rp ' + ${#numbers.formatDecimal(o.hargaBeli, 0, 'COMMA', 0, 'POINT')}"
-                  ></td>
-                  <td>
-                    <span
-                      th:if="${o.quantity > 10}"
-                      style="
-                        background: #dcfce7;
-                        color: #166534;
-                        padding: 4px 10px;
-                        border-radius: 20px;
-                        font-size: 0.75rem;
-                        font-weight: 600;
-                      "
-                    >
-                      TERSEDIA
-                    </span>
-                    <span
-                      th:if="${o.quantity <= 10}"
-                      style="
-                        background: #fee2e2;
-                        color: #991b1b;
-                        padding: 4px 10px;
-                        border-radius: 20px;
-                        font-size: 0.75rem;
-                        font-weight: 600;
-                      "
-                    >
-                      STOK RENDAH
-                    </span>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
+<div class="form-group" style="margin-top: 1rem">
+            <label
+              ><i class="fa-solid fa-book-medical"></i> Indikasi / Kegunaan
+              (MIMS)</label
+            >
+            <textarea
+              th:field="*{indikasi}"
+              rows="2"
+              placeholder="Deskripsi indikasi & kegunaan obat..."
+            ></textarea>
           </div>
+
+          <button
+            type="submit"
+            class="btn btn-primary"
+            style="margin-top: 1rem; width: 100%"
+          >
+            <i class="fa-solid fa-plus"></i> Tambah Obat ke Inventory
+          </button>
+        </form>
+      </div>
+<div class="card">
+        <h3 style="margin-bottom: 1.5rem">
+          <i class="fa-solid fa-list"></i> Daftar Obat
+        </h3>
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>No Faktur</th>
+                <th>Nama Obat</th>
+                <th>Batch</th>
+                <th>PBF</th>
+                <th>Satuan</th>
+                <th>Golongan</th>
+                <th>Qty</th>
+                <th>H. Beli</th>
+                <th>H. Beli+PPN</th>
+                <th>H. Jual</th>
+                <th>H. Plot</th>
+                <th>Expired</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr th:each="obat : ${obatList}">
+                <td
+                  style="font-family: monospace; font-weight: 600"
+                  th:text="${obat.noFaktur}"
+                >
+                  -
+                </td>
+                <td th:text="${obat.namaObat}">Obat</td>
+                <td th:text="${obat.nomorBatch}">-</td>
+                <td th:text="${obat.namaPBF}">-</td>
+                <td th:text="${obat.satuan}">-</td>
+                <td th:text="${obat.golongan}">-</td>
+                <td>
+                  <span
+                    th:text="${obat.quantity}"
+                    th:style="${obat.quantity != null && obat.quantity < 10 ? 'color: var(--accent); font-weight: 800' : 'font-weight: 600'}"
+                    >0</span
+                  >
+                </td>
+                <td
+                  th:text="${obat.hargaBeli != null ? 'Rp ' + #numbers.formatDecimal(obat.hargaBeli, 0, 'COMMA', 0, 'POINT') : '-'}"
+                >
+                  -
+                </td>
+                <td
+                  th:text="${obat.hargaBeliPpn != null ? 'Rp ' + #numbers.formatDecimal(obat.hargaBeliPpn, 0, 'COMMA', 0, 'POINT') : '-'}"
+                >
+                  -
+                </td>
+                <td
+                  th:text="${obat.hargaJualApotek != null ? 'Rp ' + #numbers.formatDecimal(obat.hargaJualApotek, 0, 'COMMA', 0, 'POINT') : '-'}"
+                >
+                  -
+                </td>
+                <td
+                  th:text="${obat.hargaPlot != null ? 'Rp ' + #numbers.formatDecimal(obat.hargaPlot, 0, 'COMMA', 0, 'POINT') : '-'}"
+                >
+                  -
+                </td>
+                <td th:text="${obat.tglExpired}">-</td>
+                <td>
+                  <span
+                    th:if="${obat.quantity != null && obat.quantity < 10}"
+                    style="color: var(--accent); font-weight: 700"
+                  >
+                    <i class="fa-solid fa-triangle-exclamation"></i> Low
+                  </span>
+                  <span
+                    th:if="${obat.quantity == null || obat.quantity >= 10}"
+                    style="color: var(--success); font-weight: 600"
+                  >
+                    <i class="fa-solid fa-check-circle"></i> OK
+                  </span>
+                </td>
+              </tr>
+              <tr th:if="${obatList.isEmpty()}">
+                <td
+                  colspan="13"
+                  style="
+                    text-align: center;
+                    color: var(--text-muted);
+                    padding: 2rem;
+                  "
+                >
+                  Belum ada obat di inventory
+                </td>
+              </tr>
+            </tbody>
+          </table>
         </div>
       </div>
 
-      <!-- Scanner Script inside context -->
-      <script src="https://unpkg.com/@zxing/library@latest"></script>
       <script>
-        const codeReader = new ZXing.BrowserMultiFormatReader();
-        const startButton = document.getElementById("start-scanner");
-        const stopButton = document.getElementById("stop-scanner");
-        const scannerContainer = document.getElementById("scanner-container");
-        const barcodeInput = document.getElementById("barcode-input");
-        const videoElement = document.getElementById("video");
-        const cameraSelect = document.getElementById("camera-select");
-
-        let currentDeviceId = null;
-
-        startButton.onclick = async () => {
-          try {
-            const videoInputDevices = await codeReader.listVideoInputDevices();
-            if (videoInputDevices.length === 0) {
-              alert("Kamera tidak ditemukan!");
-              return;
-            }
-
-            // Fill select options
-            cameraSelect.innerHTML = "";
-            videoInputDevices.forEach((device) => {
-              const option = document.createElement("option");
-              option.value = device.deviceId;
-              option.text = device.label || `Camera ${cameraSelect.length + 1}`;
-              cameraSelect.appendChild(option);
-            });
-
-            // Auto-select back camera if possible
-            let selectedDeviceId = videoInputDevices[0].deviceId;
-            for (const device of videoInputDevices) {
-              if (device.label.toLowerCase().includes("back")) {
-                selectedDeviceId = device.deviceId;
-                break;
-              }
-            }
-            cameraSelect.value = selectedDeviceId;
-
-            startScanning(selectedDeviceId);
-          } catch (err) {
-            console.error(err);
-            alert("Gagal mengakses kamera: " + err);
-          }
-        };
-
-        cameraSelect.onchange = () => {
-          if (cameraSelect.value) {
-            codeReader.reset();
-            startScanning(cameraSelect.value);
-          }
-        };
-
-        function startScanning(deviceId) {
-          scannerContainer.style.display = "block";
-          startButton.style.display = "none";
-          currentDeviceId = deviceId;
-
-          codeReader.decodeFromVideoDevice(deviceId, "video", (result, err) => {
-            if (result) {
-              console.log(result.text);
-              barcodeInput.value = result.text;
-              stopScanner();
-              if (navigator.vibrate) navigator.vibrate(200);
-            }
-          });
-        }
-
-        stopButton.onclick = stopScanner;
-
-        function stopScanner() {
-          codeReader.reset();
-          scannerContainer.style.display = "none";
-          startButton.style.display = "block";
-          currentDeviceId = null;
+        function calcPPN() {
+          var hb = parseFloat(document.getElementById("hargaBeli").value) || 0;
+          document.getElementById("hargaBeliPpn").value = (hb * 1.11).toFixed(
+            2,
+          );
         }
       </script>
     </div>

@@ -30,10 +30,38 @@ public class Obat {
 
     private String supplier;
 
+    @Column(name = "no_faktur")
+    private String noFaktur;
+
+    private String satuan;
+
+    @Column(name = "nama_pbf")
+    private String namaPBF;
+
     @Column(name = "harga_beli")
     private Double hargaBeli;
 
+    @Column(name = "harga_jual_apotek")
+    private Double hargaJualApotek;
+
+    @Column(name = "harga_plot")
+    private Double hargaPlot;
+
+    @Column(name = "harga_beli_ppn")
+    private Double hargaBeliPpn;
+
     private Integer quantity;
 
-    private String barcode;
+    private String golongan;
+
+    @Column(name = "indikasi", length = 1000)
+    private String indikasi;
+
+    @PrePersist
+    @PreUpdate
+    protected void calculatePpn() {
+        if (hargaBeli != null) {
+            hargaBeliPpn = hargaBeli * 1.11;
+        }
+    }
 }

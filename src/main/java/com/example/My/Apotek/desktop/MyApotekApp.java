@@ -1,780 +1,936 @@
 package com.example.My.Apotek.desktop;
 
-import com.lowagie.text.Document;
-import com.lowagie.text.DocumentException;
-import com.lowagie.text.Paragraph;
-import com.lowagie.text.pdf.PdfWriter;
-import com.lowagie.text.pdf.PdfPTable;
-import com.lowagie.text.pdf.PdfPCell;
-import com.lowagie.text.FontFactory;
-import com.lowagie.text.Phrase;
-import com.lowagie.text.PageSize;
-
 import javax.swing.*;
-import javax.swing.border.Border;
+import javax.swing.table.DefaultTableModel;
 import java.awt.*;
-import java.io.File;
-import java.io.FileOutputStream;
+import java.awt.event.*;
+import java.io.*;
 import java.sql.*;
 import java.time.LocalDate;
-import java.time.temporal.ChronoUnit;
-import java.util.UUID;
+import java.time.LocalDateTime;
+import org.apache.poi.xssf.usermodel.*;
+import com.lowagie.text.Document;
+import com.lowagie.text.Paragraph;
+import com.lowagie.text.pdf.PdfWriter;
+import com.formdev.flatlaf.FlatLightLaf;
+import static com.example.My.Apotek.desktop.UIHelper.*;
 
 public class MyApotekApp extends JFrame {
-    // Komponen Alur 1
-    private JTextField txtScanBarcode;
-    private JTextField txtNamaObat, txtBatch, txtTglProd, txtExp, txtSupplier, txtHarga, txtQty;
-
-    // Komponen Alur 2
-    private JTextField txtNik, txtNamaPasien, txtUsia, txtBB, txtDosis;
-    private JTextField txtDiagnosa, txtGFR, txtMedikasiLain;
-    private JComboBox<String> cbAlergi, cbObatResep;
-
-    // Komponen Alur 3
-    private JTextField txtScanStok;
-    private JTextField txtStokSistem, txtStokFisik;
-
-    private JTextArea txtResult;
-    private JButton btnDispense;
-    private JButton btnCekStok; // Added for Global Access
+    private static final String DB = "jdbc:h2:./data/apotek_db;AUTO_SERVER=TRUE";
+    private static final String U = "sa", P = "";
+    private JPanel contentPanel;
+    private CardLayout cardLayout;
 
     public MyApotekApp() {
-        // 1. SET MODERN THEME (Nimbus with Flat Customization)
-        try {
-            for (UIManager.LookAndFeelInfo info : UIManager.getInstalledLookAndFeels()) {
-                if ("Nimbus".equals(info.getName())) {
-                    UIManager.setLookAndFeel(info.getClassName());
-                    UIManager.getLookAndFeelDefaults().put("TextField.contentMargins", new Insets(5, 10, 5, 10));
-                    UIManager.getLookAndFeelDefaults().put("Button.contentMargins", new Insets(8, 15, 8, 15));
-                    break;
-                }
-            }
-            Font modernFont = new Font("Segoe UI", Font.PLAIN, 13);
-            UIManager.put("Label.font", modernFont);
-            UIManager.put("TextField.font", modernFont);
-            UIManager.put("Button.font", new Font("Segoe UI", Font.BOLD, 13));
-            UIManager.put("TabbedPane.font", new Font("Segoe UI", Font.BOLD, 14));
-        } catch (Exception e) {
-        }
-
-        setTitle("My Apotek Professional System v2.0");
-        setSize(1000, 750);
+        setTitle("My Apotek Professional");
+        setSize(1280, 860);
+        setMinimumSize(new Dimension(1000, 700));
         setDefaultCloseOperation(EXIT_ON_CLOSE);
-        setLayout(new BorderLayout());
-        setLocationRelativeTo(null); // Center
+        setLocationRelativeTo(null);
+        ensureTableExists();
 
-        JTabbedPane tabbedPane = new JTabbedPane();
-        tabbedPane.setBackground(new Color(245, 247, 250));
+        JPanel root = new JPanel(new BorderLayout());
+        root.setBackground(BG);
+        root.add(createSidebar(), BorderLayout.WEST);
 
-        // --- TAB 1: BARANG DATANG ---
-        JPanel p1 = new JPanel(new GridBagLayout());
-        p1.setBackground(Color.WHITE);
-        p1.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
-
-        GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(10, 10, 10, 10);
-        gbc.fill = GridBagConstraints.HORIZONTAL;
-        gbc.weightx = 1.0;
-
-        JLabel title1 = new JLabel("INBOUND INVENTORY (BARANG MASUK)");
-        title1.setFont(new Font("Segoe UI", Font.BOLD, 18));
-        title1.setForeground(new Color(44, 62, 80));
-        gbc.gridx = 0;
-        gbc.gridy = 0;
-        gbc.gridwidth = 2;
-        p1.add(title1, gbc);
-
-        // Scan Section
-        JPanel pScan = new JPanel(new BorderLayout(10, 0));
-        pScan.setBackground(new Color(236, 240, 241));
-        pScan.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(new Color(189, 195, 199)),
-                BorderFactory.createEmptyBorder(15, 15, 15, 15)));
-
-        JLabel lblScan = new JLabel("⚡ QUICK SCAN BARCODE / SKU (Press Enter):");
-        lblScan.setFont(new Font("Segoe UI", Font.BOLD, 14));
-        lblScan.setForeground(new Color(39, 174, 96));
-        txtScanBarcode = new JTextField();
-        txtScanBarcode.setFont(new Font("Consolas", Font.BOLD, 16));
-        txtScanBarcode.addActionListener(e -> handleScanBarcodeAlur1());
-
-        pScan.add(lblScan, BorderLayout.NORTH);
-        pScan.add(txtScanBarcode, BorderLayout.CENTER);
-        gbc.gridy = 1;
-        p1.add(pScan, gbc);
-
-        // Form Grid
-        JPanel pForm1 = new JPanel(new GridLayout(4, 2, 15, 15));
-        pForm1.setBackground(Color.WHITE);
-        pForm1.setBorder(BorderFactory.createTitledBorder("Product Details"));
-
-        txtNamaObat = createStyledField();
-        txtBatch = createStyledField();
-        txtTglProd = createStyledField("2024-01-01");
-        txtExp = createStyledField("2026-06-01");
-        txtSupplier = createStyledField();
-        txtHarga = createStyledField();
-        txtQty = createStyledField();
-
-        addLabelAndField(pForm1, "Nama Obat:", txtNamaObat);
-        addLabelAndField(pForm1, "Nomor Batch:", txtBatch);
-        addLabelAndField(pForm1, "Tgl Produksi:", txtTglProd);
-        addLabelAndField(pForm1, "Tgl Expired:", txtExp);
-        addLabelAndField(pForm1, "Supplier:", txtSupplier);
-        addLabelAndField(pForm1, "Harga Beli (Rp):", txtHarga);
-        addLabelAndField(pForm1, "Quantity (+):", txtQty);
-
-        gbc.gridy = 2;
-        p1.add(pForm1, gbc);
-
-        JButton btnSimpanBarang = new JButton("💾 SIMPAN DATA (SAVE & PRINT BARCODE)");
-        btnSimpanBarang.setBackground(new Color(41, 128, 185));
-        btnSimpanBarang.setForeground(Color.WHITE);
-        btnSimpanBarang.setPreferredSize(new Dimension(200, 45));
-        btnSimpanBarang.addActionListener(e -> handleSimpanBarang());
-
-        gbc.gridy = 3;
-        gbc.fill = GridBagConstraints.NONE;
-        gbc.anchor = GridBagConstraints.EAST;
-        p1.add(btnSimpanBarang, gbc);
-
-        tabbedPane.addTab("📦 Barang Datang", new JScrollPane(p1));
-
-        // --- TAB 2: INPUT RESEP ---
-        JPanel p2 = new JPanel(new BorderLayout(15, 15));
-        p2.setBackground(new Color(245, 247, 250));
-        p2.setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
-
-        JPanel p2Header = new JPanel(new BorderLayout());
-        p2Header.setBackground(new Color(245, 247, 250));
-        JLabel title2 = new JLabel("PRESCRIPTION PROCESSING & CDSS VALIDATION");
-        title2.setFont(new Font("Segoe UI", Font.BOLD, 18));
-        title2.setForeground(new Color(44, 62, 80));
-        p2Header.add(title2, BorderLayout.WEST);
-        p2.add(p2Header, BorderLayout.NORTH);
-
-        JPanel p2Content = new JPanel(new GridLayout(1, 2, 20, 0));
-        p2Content.setBackground(new Color(245, 247, 250));
-
-        // LEFT: PATIENT DATA
-        JPanel pPasien = new JPanel(new GridBagLayout());
-        pPasien.setBorder(createModernBorder("Data Pasien (Patient Info)"));
-        pPasien.setBackground(Color.WHITE);
-
-        txtNik = createStyledField();
-        txtNamaPasien = createStyledField();
-        txtUsia = createStyledField();
-        txtBB = createStyledField();
-        txtGFR = createStyledField();
-        cbAlergi = new JComboBox<>(new String[] { "Tidak Ada", "Paracetamol", "Amoxicillin", "Antibiotik" });
-        txtMedikasiLain = createStyledField();
-
-        GridBagConstraints gbcL = new GridBagConstraints();
-        gbcL.fill = GridBagConstraints.HORIZONTAL;
-        gbcL.insets = new Insets(5, 5, 5, 5);
-        gbcL.weightx = 1.0;
-
-        addFormRow(pPasien, gbcL, 0, "NIK:", txtNik);
-        addFormRow(pPasien, gbcL, 1, "Nama Pasien:", txtNamaPasien);
-        addFormRow(pPasien, gbcL, 2, "Usia (Tahun):", txtUsia);
-        addFormRow(pPasien, gbcL, 3, "Berat Badan (kg):", txtBB);
-        addFormRow(pPasien, gbcL, 4, "Fungsi Ginjal (GFR):", txtGFR);
-        addFormRow(pPasien, gbcL, 5, "Riwayat Alergi:", cbAlergi);
-        addFormRow(pPasien, gbcL, 6, "Medikasi Lain:", txtMedikasiLain);
-
-        // RIGHT: CLINICAL
-        JPanel pKlinis = new JPanel(new GridBagLayout());
-        pKlinis.setBorder(createModernBorder("Data Klinis & Resep (Clinical)"));
-        pKlinis.setBackground(Color.WHITE);
-
-        txtDiagnosa = createStyledField();
-        JPanel pMode = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        pMode.setBackground(Color.WHITE);
-        JRadioButton rbManual = new JRadioButton("Manual Input", true);
-        JRadioButton rbOCR = new JRadioButton("Scan AI OCR");
-        rbManual.setBackground(Color.WHITE);
-        rbOCR.setBackground(Color.WHITE);
-        ButtonGroup bgMode = new ButtonGroup();
-        bgMode.add(rbManual);
-        bgMode.add(rbOCR);
-        pMode.add(rbManual);
-        pMode.add(rbOCR);
-
-        JButton btnScanResep = new JButton("📷 Scan/Upload Resep");
-        btnScanResep.setEnabled(false);
-        btnScanResep.addActionListener(e -> handleScanResepOCR());
-
-        cbObatResep = new JComboBox<>(
-                new String[] { "Paracetamol", "Amoxicillin", "Cefadroxil", "Ketorolac", "Asam Mefenamat" });
-        txtDosis = createStyledField();
-
-        rbManual.addActionListener(e -> {
-            btnScanResep.setEnabled(false);
-            cbObatResep.setEnabled(true);
-        });
-        rbOCR.addActionListener(e -> {
-            btnScanResep.setEnabled(true);
-            cbObatResep.setEnabled(false);
-        });
-
-        GridBagConstraints gbcR = new GridBagConstraints();
-        gbcR.fill = GridBagConstraints.HORIZONTAL;
-        gbcR.insets = new Insets(5, 5, 5, 5);
-        gbcR.weightx = 1.0;
-
-        addFormRow(pKlinis, gbcR, 0, "Diagnosa Dokter:", txtDiagnosa);
-        addFormRow(pKlinis, gbcR, 1, "Mode Input:", pMode);
-        addFormRow(pKlinis, gbcR, 2, "", btnScanResep);
-        addFormRow(pKlinis, gbcR, 3, "Pilih Obat:", cbObatResep);
-        addFormRow(pKlinis, gbcR, 4, "Dosis (mg):", txtDosis);
-
-        JButton btnAnalisis = new JButton("🔍 JALANKAN VALIDASI (CHECK)");
-        btnAnalisis.setBackground(new Color(230, 126, 34));
-        btnAnalisis.setForeground(Color.WHITE);
-        btnAnalisis.addActionListener(e -> handleAnalisisResep());
-
-        btnDispense = new JButton("✅ APPROVE & DISPENSE");
-        btnDispense.setEnabled(false);
-        btnDispense.setBackground(new Color(39, 174, 96));
-        btnDispense.setForeground(Color.WHITE);
-        btnDispense.addActionListener(e -> handleDispense());
-
-        JPanel pActions = new JPanel(new GridLayout(1, 2, 10, 0));
-        pActions.add(btnAnalisis);
-        pActions.add(btnDispense);
-
-        gbcR.gridy = 10;
-        gbcR.gridwidth = 2;
-        gbcR.insets = new Insets(20, 5, 5, 5);
-        pKlinis.add(pActions, gbcR);
-
-        p2Content.add(pPasien);
-        p2Content.add(pKlinis);
-        p2.add(p2Content, BorderLayout.CENTER);
-
-        tabbedPane.addTab("💊 Input Resep", new JScrollPane(p2));
-
-        // --- TAB 3: ALUR STOK OPNAME ---
-        JPanel p3 = new JPanel(new GridBagLayout());
-        p3.setBackground(Color.WHITE);
-        p3.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
-
-        // Form Panel
-        JPanel pOpname = new JPanel(new GridBagLayout());
-        pOpname.setBackground(Color.WHITE);
-        pOpname.setBorder(createModernBorder("Stock Opname (Audit Flow)"));
-
-        GridBagConstraints gbc3 = new GridBagConstraints();
-        gbc3.insets = new Insets(10, 10, 10, 10);
-        gbc3.fill = GridBagConstraints.HORIZONTAL;
-
-        // 1. Scan Section
-        gbc3.gridx = 0;
-        gbc3.gridy = 0;
-        gbc3.weightx = 0.3;
-        JLabel lblScan3 = new JLabel("1. SCAN BARCODE / SKU:");
-        lblScan3.setFont(new Font("Segoe UI", Font.BOLD, 14));
-        pOpname.add(lblScan3, gbc3);
-
-        gbc3.gridx = 1;
-        gbc3.weightx = 0.7;
-        txtScanStok = createStyledField();
-        txtScanStok.setBackground(new Color(255, 243, 205)); // Yellow tint for focus
-        txtScanStok.addActionListener(e -> handleScanStokOpname());
-        pOpname.add(txtScanStok, gbc3);
-
-        // 2. System Stock (Read Only)
-        gbc3.gridx = 0;
-        gbc3.gridy = 1;
-        gbc3.weightx = 0.3;
-        pOpname.add(new JLabel("2. Stok Sistem (Database):"), gbc3);
-
-        gbc3.gridx = 1;
-        gbc3.weightx = 0.7;
-        txtStokSistem = createStyledField();
-        txtStokSistem.setEditable(false);
-        pOpname.add(txtStokSistem, gbc3);
-
-        // 3. Physical Stock (Locked until Scan)
-        gbc3.gridx = 0;
-        gbc3.gridy = 2;
-        gbc3.weightx = 0.3;
-        pOpname.add(new JLabel("3. Stok Fisik (Input Manual):"), gbc3);
-
-        gbc3.gridx = 1;
-        gbc3.weightx = 0.7;
-        txtStokFisik = createStyledField();
-        txtStokFisik.setEnabled(false); // LOCKED INITIALLY
-        txtStokFisik.setBackground(new Color(240, 240, 240));
-        pOpname.add(txtStokFisik, gbc3);
-
-        // Buttons
-        JPanel p3Btn = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        p3Btn.setBackground(Color.WHITE);
-
-        JButton btnResetOpname = new JButton("🔄 Reset");
-        btnCekStok = new JButton("⚖️ BANDINGKAN (AUDIT)");
-        btnCekStok.setEnabled(false); // LOCKED INITIALLY
-        btnCekStok.setBackground(new Color(39, 174, 96));
-        btnCekStok.setForeground(Color.WHITE);
-
-        p3Btn.add(btnResetOpname);
-        p3Btn.add(btnCekStok);
-
-        btnResetOpname.addActionListener(e -> {
-            txtScanStok.setText("");
-            txtStokSistem.setText("");
-            txtStokFisik.setText("");
-            txtStokFisik.setEnabled(false);
-            btnCekStok.setEnabled(false);
-            txtScanStok.requestFocus();
-        });
-
-        btnCekStok.addActionListener(e -> handleCekStok());
-
-        // Assembly
-        gbc.gridx = 0;
-        gbc.gridy = 0;
-        gbc.weightx = 1.0;
-        gbc.fill = GridBagConstraints.BOTH;
-        p3.add(pOpname, gbc);
-
-        gbc.gridy = 1;
-        gbc.fill = GridBagConstraints.HORIZONTAL;
-        p3.add(p3Btn, gbc);
-
-        tabbedPane.addTab("📊 Stok Opname", new JScrollPane(p3));
-
-        // --- TAB 4: LAPORAN ---
-        JPanel p4 = new JPanel(new GridBagLayout());
-        p4.setBackground(new Color(245, 247, 250));
-
-        JPanel pMenu = new JPanel(new GridLayout(3, 1, 20, 20));
-        pMenu.setOpaque(false);
-
-        JButton btnPrintKeuangan = createLargeButton("💰 CETAK LAPORAN KEUANGAN", "Laporan Pendapatan & HPP");
-        JButton btnPrintBarang = createLargeButton("📦 CETAK LAPORAN STOK", "Mutasi Stok & Expired Date");
-        JButton btnPrintKlinis = createLargeButton("🩺 CETAK DATA KLINIS", "Riwayat Resep & Pasien");
-
-        btnPrintKeuangan.addActionListener(e -> cetakLaporan("Laporan_Keuangan.pdf", 1));
-        btnPrintBarang.addActionListener(e -> cetakLaporan("Laporan_Barang.pdf", 2));
-        btnPrintKlinis.addActionListener(e -> cetakLaporan("Laporan_Klinis.pdf", 3));
-
-        pMenu.add(btnPrintKeuangan);
-        pMenu.add(btnPrintBarang);
-        pMenu.add(btnPrintKlinis);
-        p4.add(pMenu);
-
-        tabbedPane.addTab("📑 Laporan", p4);
-
-        add(tabbedPane, BorderLayout.CENTER);
-
-        txtResult = new JTextArea(8, 60);
-        txtResult.setEditable(false);
-        txtResult.setFont(new Font("Consolas", Font.PLAIN, 12));
-        txtResult.setBackground(new Color(44, 62, 80));
-        txtResult.setForeground(new Color(236, 240, 241));
-
-        JPanel pLog = new JPanel(new BorderLayout());
-        pLog.setBorder(BorderFactory.createTitledBorder("System Log / Validation Output"));
-        pLog.add(new JScrollPane(txtResult), BorderLayout.CENTER);
-        add(pLog, BorderLayout.SOUTH);
+        cardLayout = new CardLayout();
+        contentPanel = new JPanel(cardLayout);
+        contentPanel.setBackground(BG);
+        contentPanel.add(createInventoryPanel(), "inv");
+        contentPanel.add(createPrescriptionPanel(), "rx");
+        contentPanel.add(createOpnamePanel(), "opn");
+        contentPanel.add(createReportsPanel(), "rep");
+        contentPanel.add(createPenjualanPanel(), "pos");
+        contentPanel.add(createMIMSPanel(), "mims");
+        root.add(contentPanel, BorderLayout.CENTER);
+        setContentPane(root);
     }
 
-    // --- UI HELPER METHODS ---
-    private javax.swing.border.Border createModernBorder(String title) {
-        return BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(new Color(200, 200, 200), 1, true),
-                BorderFactory.createTitledBorder(
-                        BorderFactory.createEmptyBorder(), title,
-                        javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION,
-                        javax.swing.border.TitledBorder.DEFAULT_POSITION,
-                        new Font("Segoe UI", Font.BOLD, 14), new Color(44, 62, 80)));
-    }
+    private java.util.List<JButton> sidebarButtons = new java.util.ArrayList<>();
 
-    private void addFormRow(JPanel p, GridBagConstraints gbc, int row, String label, JComponent comp) {
-        gbc.gridx = 0;
-        gbc.gridy = row;
-        gbc.gridwidth = 1;
-        gbc.weightx = 0.3;
-        JLabel l = new JLabel(label);
-        l.setFont(new Font("Segoe UI", Font.PLAIN, 12));
-        p.add(l, gbc);
-        gbc.gridx = 1;
-        gbc.weightx = 0.7;
-        p.add(comp, gbc);
-    }
+    private JPanel createSidebar() {
+        JPanel sb = new JPanel();
+        sb.setBackground(SIDEBAR_BG);
+        sb.setPreferredSize(new Dimension(260, 0));
+        sb.setLayout(new BorderLayout());
 
-    private void addLabelAndField(JPanel p, String label, JTextField field) {
-        p.add(new JLabel(label));
-        p.add(field);
-    }
+        JPanel brand = new JPanel() {
+            protected void paintComponent(Graphics g) {
+                super.paintComponent(g);
+                Graphics2D g2 = (Graphics2D) g;
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
-    private JTextField createStyledField() {
-        return createStyledField("");
-    }
-
-    private JTextField createStyledField(String text) {
-        JTextField tf = new JTextField(text);
-        tf.setFont(new Font("Segoe UI", Font.PLAIN, 13));
-        return tf;
-    }
-
-    private JButton createLargeButton(String title, String subtitle) {
-        JButton btn = new JButton("<html><center><b style='font-size:14px'>" + title
-                + "</b><br><span style='font-size:10px'>" + subtitle + "</span></center></html>");
-        btn.setPreferredSize(new Dimension(300, 80));
-        btn.setFocusPainted(false);
-        return btn;
-    }
-
-    // --- LOGIC ---
-    private void handleSimpanBarang() {
-        try (Connection conn = getConnection()) {
-            ensureTableExists(conn);
-            String nama = txtNamaObat.getText();
-            String batch = txtBatch.getText();
-            int qtyInput = 0;
-            try {
-                qtyInput = Integer.parseInt(txtQty.getText());
-            } catch (Exception e) {
+                g2.setColor(PRIMARY);
+                g2.fillRoundRect(24, 30, 36, 36, 12, 12);
+                g2.setColor(Color.WHITE);
+                g2.setStroke(new BasicStroke(2.5f));
+                g2.rotate(Math.toRadians(45), 42, 48);
+                g2.drawRoundRect(36, 44, 12, 8, 4, 4);
+                g2.drawLine(42, 44, 42, 52);
+                g2.rotate(-Math.toRadians(45), 42, 48);
             }
+        };
+        brand.setBackground(SIDEBAR_BG);
+        brand.setPreferredSize(new Dimension(260, 100));
+        brand.setLayout(null);
 
-            String checkSql = "SELECT id, quantity FROM obat WHERE LOWER(nama_obat) = LOWER(?) AND LOWER(nomor_batch) = LOWER(?)";
-            PreparedStatement checkStmt = conn.prepareStatement(checkSql);
-            checkStmt.setString(1, nama);
-            checkStmt.setString(2, batch);
-            ResultSet rs = checkStmt.executeQuery();
+        JLabel brandName = new JLabel("My Apotek");
+        brandName.setFont(new Font("Segoe UI", Font.BOLD, 22));
+        brandName.setForeground(Color.WHITE);
+        brandName.setBounds(72, 28, 160, 30);
+        brand.add(brandName);
 
-            if (rs.next()) {
-                int id = rs.getInt("id");
-                int oldQty = rs.getInt("quantity");
-                int newQty = oldQty + qtyInput; // Define newQty here
-                String updateSql = "UPDATE obat SET quantity = ? WHERE id = ?";
-                PreparedStatement updateStmt = conn.prepareStatement(updateSql);
-                updateStmt.setInt(1, newQty);
-                updateStmt.setInt(2, id);
-                updateStmt.executeUpdate();
-                log("✅ [UPDATE STOK] Batch " + batch + " ditemukan. Stok " + oldQty + " -> " + newQty);
-            } else {
-                // Fix: Use scanned/typed barcode if available, otherwise generate random
-                String inputBarcode = txtScanBarcode.getText().trim();
-                String barcode;
-                if (inputBarcode != null && !inputBarcode.isEmpty()) {
-                    barcode = inputBarcode;
-                } else {
-                    barcode = UUID.randomUUID().toString().substring(0, 8).toUpperCase();
+        JLabel brandSub = new JLabel("Professional");
+        brandSub.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        brandSub.setForeground(new Color(148, 163, 184));
+        brandSub.setBounds(74, 56, 160, 20);
+        brand.add(brandSub);
+
+        sb.add(brand, BorderLayout.NORTH);
+
+        JPanel menu = new JPanel();
+        menu.setBackground(SIDEBAR_BG);
+        menu.setLayout(new BoxLayout(menu, BoxLayout.Y_AXIS));
+
+        String[][] items = {
+                { "Inventory", "inv", "Manage stock & items" },
+                { "Resep Dokter", "rx", "Process prescriptions" },
+                { "Stok Opname", "opn", "Audit & adjustments" },
+                { "Laporan", "rep", "Financial reports" },
+                { "Penjualan", "pos", "Direct sales (OTC)" },
+                { "MIMS Apotek", "mims", "Drug database" }
+        };
+
+        for (String[] it : items) {
+            String label = it[0];
+            String type = it[1];
+            boolean isActive = type.equals("inv");
+
+            JButton btn = createSidebarButton(label, type, isActive);
+
+            btn.addActionListener(e -> {
+                cardLayout.show(contentPanel, type);
+                updateSidebarState(btn);
+            });
+
+            sidebarButtons.add(btn);
+            menu.add(Box.createVerticalStrut(4));
+            menu.add(btn);
+        }
+        menu.add(Box.createVerticalStrut(4));
+
+        JPanel menuWrapper = new JPanel(new BorderLayout());
+        menuWrapper.setBackground(SIDEBAR_BG);
+        menuWrapper.add(menu, BorderLayout.NORTH);
+
+        JLabel ver = new JLabel("v2.1 Pro  \u00A9 2026", SwingConstants.CENTER);
+        ver.setFont(new Font("Segoe UI", Font.PLAIN, 11));
+        ver.setForeground(new Color(51, 65, 85));
+        ver.setPreferredSize(new Dimension(260, 40));
+        menuWrapper.add(ver, BorderLayout.SOUTH);
+
+        sb.add(menuWrapper, BorderLayout.CENTER);
+        return sb;
+    }
+
+    private void updateSidebarState(JButton active) {
+        for (JButton btn : sidebarButtons) {
+            btn.putClientProperty("Active", btn == active);
+            btn.repaint();
+        }
+    }
+
+    private JPanel createInventoryPanel() {
+        JPanel p = new JPanel(new BorderLayout(16, 16));
+        p.setOpaque(false);
+        p.setBorder(BorderFactory.createEmptyBorder(24, 24, 24, 24));
+
+        JLabel header = new JLabel("Manajemen Inventory Obat");
+        header.setFont(TITLE);
+        header.setForeground(TEXT);
+
+        JPanel formCard = card("Input Obat Baru");
+        JPanel formGrid = new JPanel(new GridLayout(7, 2, 12, 8));
+        formGrid.setOpaque(false);
+        String[] labels = { "Nama Obat", "Qty", "No Faktur", "Harga Beli", "Batch", "H.Beli+PPN 11%", "PBF",
+                "H.Jual Apotek", "Supplier", "H.Plot", "Satuan", "Indikasi", "Golongan", "" };
+        JTextField[] f = new JTextField[labels.length];
+        for (int i = 0; i < labels.length; i++) {
+            if (labels[i].isEmpty()) {
+                formGrid.add(new JLabel());
+                continue;
+            }
+            f[i] = styledField(labels[i]);
+            if (i == 5) {
+                f[i].setEditable(false);
+                f[i].setBackground(new Color(241, 245, 249));
+            }
+            formGrid.add(formRow(labels[i] + ":", f[i]));
+        }
+        f[3].addKeyListener(new KeyAdapter() {
+            public void keyReleased(KeyEvent e) {
+                try {
+                    f[5].setText(String.format("%.0f", Double.parseDouble(f[3].getText()) * 1.11));
+                } catch (Exception ignored) {
+                    f[5].setText("");
                 }
-
-                String insertSql = "INSERT INTO obat (nama_obat, nomor_batch, tgl_produksi, tgl_expired, supplier, harga_beli, quantity, barcode) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
-                PreparedStatement pstmt = conn.prepareStatement(insertSql);
-                pstmt.setString(1, nama);
-                pstmt.setString(2, batch);
-                pstmt.setDate(3, java.sql.Date.valueOf(txtTglProd.getText()));
-                pstmt.setDate(4, java.sql.Date.valueOf(txtExp.getText()));
-                pstmt.setString(5, txtSupplier.getText());
-                pstmt.setDouble(6, Double.parseDouble(txtHarga.getText()));
-                pstmt.setInt(7, qtyInput);
-                pstmt.setString(8, barcode);
-                pstmt.setString(8, barcode);
-                pstmt.executeUpdate();
-                log("✅ Barang Baru Saved. Barcode: " + barcode);
             }
+        });
+        formCard.add(formGrid, BorderLayout.CENTER);
 
-            // 2. Persistent Logging (Riwayat Barang)
-            String logSql = "INSERT INTO riwayat_barang (nama_obat, nomor_batch, tipe, quantity, timestamp) VALUES (?, ?, 'MASUK', ?, CURRENT_TIMESTAMP)";
-            PreparedStatement logStmt = conn.prepareStatement(logSql);
-            logStmt.setString(1, nama);
-            logStmt.setString(2, batch);
-            logStmt.setInt(3, qtyInput);
-            logStmt.executeUpdate();
+        JButton btnAdd = styledBtn("Tambah Obat", PRIMARY);
+        JPanel btnWrap = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        btnWrap.setOpaque(false);
+        btnWrap.add(btnAdd);
+        formCard.add(btnWrap, BorderLayout.SOUTH);
+
+        DefaultTableModel model = new DefaultTableModel(new String[] { "No Faktur", "Nama", "Batch", "PBF", "Satuan",
+                "Golongan", "Qty", "H.Beli", "H.Beli+PPN", "H.Jual", "H.Plot" }, 0) {
+            public boolean isCellEditable(int r, int c) {
+                return false;
+            }
+        };
+        JTable table = new JTable(model);
+
+        btnAdd.addActionListener(e -> {
+            try (Connection c = DriverManager.getConnection(DB, U, P)) {
+                double hb = parseNum(f[3]), ppn = hb * 1.11, hj = parseNum(f[7]), hp = parseNum(f[9]);
+                int qty = (int) parseNum(f[1]);
+                PreparedStatement ps = c.prepareStatement(
+                        "MERGE INTO obat(no_faktur, nama_obat, nomor_batch, nama_pbf, supplier, satuan, golongan, quantity, harga_beli, harga_beli_ppn, harga_jual_apotek, harga_plot, indikasi) KEY(no_faktur) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)");
+                ps.setString(1, f[2].getText());
+                ps.setString(2, f[0].getText());
+                ps.setString(3, f[4].getText());
+                ps.setString(4, f[6].getText());
+                ps.setString(5, f[8].getText());
+                ps.setString(6, f[10].getText());
+                ps.setString(7, f[12].getText());
+                ps.setInt(8, qty);
+                ps.setDouble(9, hb);
+                ps.setDouble(10, ppn);
+                ps.setDouble(11, hj);
+                ps.setDouble(12, hp);
+                ps.setString(13, f[11].getText());
+                ps.executeUpdate();
+                c.prepareStatement(
+                        "INSERT INTO riwayat_barang(nama_obat,nomor_batch,tipe,quantity,nama_pbf,harga_beli,total_harga,timestamp) VALUES('"
+                                + f[0].getText().replace("'", "''") + "','" + f[4].getText().replace("'", "''")
+                                + "','MASUK'," + qty + ",'" + f[6].getText().replace("'", "''") + "'," + hb + ","
+                                + (hb * qty) + ",CURRENT_TIMESTAMP)")
+                        .executeUpdate();
+                showSuccess(p, "Obat berhasil ditambahkan!");
+                for (JTextField tf : f)
+                    if (tf != null)
+                        tf.setText("");
+                refreshInv(model);
+            } catch (Exception ex) {
+                showError(p, ex.getMessage());
+            }
+        });
+
+        refreshInv(model);
+        JPanel top = new JPanel(new BorderLayout(0, 16));
+        top.setOpaque(false);
+        top.add(header, BorderLayout.NORTH);
+        top.add(formCard, BorderLayout.CENTER);
+        p.add(top, BorderLayout.NORTH);
+        p.add(styledScroll(table), BorderLayout.CENTER);
+        return p;
+    }
+
+    private void refreshInv(DefaultTableModel m) {
+        m.setRowCount(0);
+        try (Connection c = DriverManager.getConnection(DB, U, P);
+                ResultSet rs = c.createStatement().executeQuery("SELECT * FROM obat ORDER BY nama_obat")) {
+            while (rs.next())
+                m.addRow(new Object[] { rs.getString("no_faktur"), rs.getString("nama_obat"),
+                        rs.getString("nomor_batch"), rs.getString("nama_pbf"), rs.getString("satuan"),
+                        rs.getString("golongan"), rs.getInt("quantity"), fmt(rs.getDouble("harga_beli")),
+                        fmt(rs.getDouble("harga_beli_ppn")), fmt(rs.getDouble("harga_jual_apotek")),
+                        fmt(rs.getDouble("harga_plot")) });
+        } catch (Exception ignored) {
+        }
+    }
+
+    private JPanel createPrescriptionPanel() {
+        JPanel p = new JPanel(new BorderLayout(16, 16));
+        p.setOpaque(false);
+        p.setBorder(BorderFactory.createEmptyBorder(24, 24, 24, 24));
+        JLabel header = new JLabel("Proses Resep Dokter");
+        header.setFont(TITLE);
+        header.setForeground(TEXT);
+
+        JPanel formCard = card("Data Resep");
+        JPanel formGrid = new JPanel(new GridLayout(7, 2, 12, 8));
+        formGrid.setOpaque(false);
+        String[] labels = { "Nama Dokter", "Nama Obat", "No Praktek/SIP", "Dosis", "RS/Klinik", "Jumlah", "NIK Pasien",
+                "Harga/Item", "Nama Pasien", "Tuslah", "Diagnosa", "Embalase", "Riwayat Alergi", "TOTAL" };
+        JTextField[] f = new JTextField[labels.length];
+        for (int i = 0; i < labels.length; i++) {
+            f[i] = styledField(labels[i]);
+            if (i == 13) {
+                f[i].setEditable(false);
+                f[i].setBackground(new Color(220, 252, 231));
+                f[i].setFont(new Font("Segoe UI", Font.BOLD, 15));
+            }
+            formGrid.add(formRow(labels[i] + ":", f[i]));
+        }
+        KeyAdapter calc = new KeyAdapter() {
+            public void keyReleased(KeyEvent e) {
+                try {
+                    double h = parseNum(f[7]), tu = parseNum(f[9]), em = parseNum(f[11]);
+                    int q = f[5].getText().isEmpty() ? 1 : Integer.parseInt(f[5].getText());
+                    f[13].setText("Rp " + fmt((h * q) + tu + em));
+                } catch (Exception ignored) {
+                }
+            }
+        };
+        f[5].addKeyListener(calc);
+        f[7].addKeyListener(calc);
+        f[9].addKeyListener(calc);
+        f[11].addKeyListener(calc);
+        formCard.add(formGrid, BorderLayout.CENTER);
+
+        JButton btnRx = styledBtn("Proses Resep", SUCCESS);
+        JPanel bw = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        bw.setOpaque(false);
+        bw.add(btnRx);
+        formCard.add(bw, BorderLayout.SOUTH);
+
+        JTextArea result = new JTextArea(6, 40);
+        result.setEditable(false);
+        result.setFont(MONO);
+        result.setBackground(new Color(248, 250, 252));
+        result.setBorder(BorderFactory.createEmptyBorder(16, 16, 16, 16));
+
+        btnRx.addActionListener(e -> {
+            try (Connection c = DriverManager.getConnection(DB, U, P)) {
+                String obat = f[1].getText();
+                int qty = f[5].getText().isEmpty() ? 1 : Integer.parseInt(f[5].getText());
+                double harga = parseNum(f[7]), tuslah = parseNum(f[9]), embalase = parseNum(f[11]);
+                double total = (harga * qty) + tuslah + embalase;
+                StringBuilder warn = new StringBuilder();
+                String alergi = f[12].getText();
+                if ("Antibiotik".equalsIgnoreCase(alergi)
+                        && (obat.equalsIgnoreCase("Amoxicillin") || obat.equalsIgnoreCase("Cefadroxil")))
+                    warn.append("\u26D4 PASIEN ALERGI ANTIBIOTIK!\n");
+                ResultSet rs = c.createStatement()
+                        .executeQuery("SELECT quantity FROM obat WHERE nama_obat = '" + obat.replace("'", "''") + "'");
+                if (!rs.next() || rs.getInt("quantity") < qty) {
+                    result.setText("\u274C Stok tidak cukup!");
+                    return;
+                }
+                if (warn.length() > 0 && JOptionPane.showConfirmDialog(p, warn + "\nTetap lanjutkan?",
+                        "\u26A0\uFE0F Peringatan CDSS", JOptionPane.YES_NO_OPTION) != JOptionPane.YES_OPTION)
+                    return;
+                c.createStatement().executeUpdate("UPDATE obat SET quantity = quantity - " + qty
+                        + " WHERE nama_obat = '" + obat.replace("'", "''") + "'");
+                PreparedStatement ps = c.prepareStatement(
+                        "INSERT INTO riwayat_klinis(nik,nama_pasien,diagnosa,nama_obat,dosis,tgl_kunjungan,nama_dokter,no_praktek,nama_rumah_sakit,harga_obat,jumlah_obat,tuslah,embalase,total_harga) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
+                ps.setString(1, f[6].getText());
+                ps.setString(2, f[8].getText());
+                ps.setString(3, f[10].getText());
+                ps.setString(4, obat);
+                ps.setString(5, f[3].getText());
+                ps.setDate(6, Date.valueOf(LocalDate.now()));
+                ps.setString(7, f[0].getText());
+                ps.setString(8, f[2].getText());
+                ps.setString(9, f[4].getText());
+                ps.setDouble(10, harga);
+                ps.setInt(11, qty);
+                ps.setDouble(12, tuslah);
+                ps.setDouble(13, embalase);
+                ps.setDouble(14, total);
+                ps.executeUpdate();
+                result.setText("\u2705 RESEP BERHASIL DIPROSES\n\nDokter: " + f[0].getText() + " | RS: "
+                        + f[4].getText() + "\nPasien: " + f[8].getText() + "\nObat: " + obat + " x" + qty
+                        + "\nHarga: Rp " + fmt(harga) + " | Tuslah: Rp " + fmt(tuslah) + " | Embalase: Rp "
+                        + fmt(embalase) + "\n\n\uD83D\uDCB0 TOTAL: Rp " + fmt(total));
+            } catch (Exception ex) {
+                result.setText("\u274C " + ex.getMessage());
+            }
+        });
+
+        JPanel top = new JPanel(new BorderLayout(0, 16));
+        top.setOpaque(false);
+        top.add(header, BorderLayout.NORTH);
+        top.add(formCard, BorderLayout.CENTER);
+        p.add(top, BorderLayout.NORTH);
+        JScrollPane rsp = new JScrollPane(result);
+        rsp.setBorder(new javax.swing.border.LineBorder(BORDER, 1, true));
+        p.add(rsp, BorderLayout.CENTER);
+        return p;
+    }
+
+    private JPanel createOpnamePanel() {
+        JPanel p = new JPanel(new BorderLayout(16, 16));
+        p.setOpaque(false);
+        p.setBorder(BorderFactory.createEmptyBorder(24, 24, 24, 24));
+        JLabel header = new JLabel("Stok Opname & Audit");
+        header.setFont(TITLE);
+        header.setForeground(TEXT);
+
+        JPanel formCard = card(null);
+        JPanel row = new JPanel(new FlowLayout(FlowLayout.LEFT, 12, 0));
+        row.setOpaque(false);
+        JTextField tfF = styledField("No Faktur"), tfS = styledField("Stok Fisik");
+        tfF.setPreferredSize(new Dimension(200, 40));
+        tfS.setPreferredSize(new Dimension(120, 40));
+        JButton btnC = styledBtn("\uD83D\uDD0D Cek Stok", PRIMARY), btnA = styledBtn("\uD83D\uDD04 Sesuaikan", WARNING);
+        row.add(tfF);
+        row.add(tfS);
+        row.add(btnC);
+        row.add(btnA);
+        formCard.add(row, BorderLayout.CENTER);
+
+        JTextArea res = new JTextArea(2, 40);
+        res.setEditable(false);
+        res.setFont(new Font("Segoe UI", Font.BOLD, 15));
+        res.setBackground(new Color(248, 250, 252));
+        res.setBorder(BorderFactory.createEmptyBorder(12, 16, 12, 16));
+        formCard.add(res, BorderLayout.SOUTH);
+
+        DefaultTableModel model = new DefaultTableModel(
+                new String[] { "Waktu", "No Faktur", "Obat", "Stok Sistem", "Stok Fisik", "Selisih", "Status" }, 0);
+        JTable table = new JTable(model);
+
+        btnC.addActionListener(e -> {
+            try (Connection c = DriverManager.getConnection(DB, U, P)) {
+                ResultSet rs = c.createStatement().executeQuery(
+                        "SELECT * FROM obat WHERE no_faktur = '" + tfF.getText().replace("'", "''") + "'");
+                if (!rs.next()) {
+                    res.setText("Obat tidak ditemukan");
+                    return;
+                }
+                int sistem = rs.getInt("quantity"), fisik = Integer.parseInt(tfS.getText()), sel = fisik - sistem;
+                double persen = sistem > 0 ? (Math.abs(sel) * 100.0 / sistem) : (sel == 0 ? 0 : 100);
+                String status = (persen > 5.0 && Math.abs(sel) > 1) ? "SELISIH TINGGI" : "NORMAL";
+                PreparedStatement ps = c.prepareStatement(
+                        "INSERT INTO stok_opname(nama_obat,no_faktur,stok_sistem,stok_fisik,selisih,status,tanggal) VALUES(?,?,?,?,?,?,?)");
+                ps.setString(1, rs.getString("nama_obat"));
+                ps.setString(2, tfF.getText());
+                ps.setInt(3, sistem);
+                ps.setInt(4, fisik);
+                ps.setInt(5, sel);
+                ps.setString(6, status);
+                ps.setTimestamp(7, Timestamp.valueOf(LocalDateTime.now()));
+                ps.executeUpdate();
+                String icon = status.equals("NORMAL") ? "TOLERANSI OK" : "PERLU APPROVAL";
+                res.setText(icon + " | " + status + " (" + String.format("%.1f", persen) + "%)  |  Sistem: " + sistem
+                        + "  |  Fisik: " + fisik + "  |  Selisih: " + sel);
+                if (status.equals("NORMAL")) {
+                    c.createStatement().executeUpdate("UPDATE obat SET quantity = " + fisik + " WHERE no_faktur = '"
+                            + tfF.getText().replace("'", "''") + "'");
+                    res.setText(res.getText() + "\n  >> Auto-adjust: stok diperbarui ke " + fisik);
+                }
+                refreshOpn(model);
+            } catch (Exception ex) {
+                res.setText("Error: " + ex.getMessage());
+            }
+        });
+
+        btnA.addActionListener(e -> {
+            try (Connection c = DriverManager.getConnection(DB, U, P)) {
+                int fisik = Integer.parseInt(tfS.getText());
+                ResultSet rs = c.createStatement().executeQuery(
+                        "SELECT quantity FROM obat WHERE no_faktur = '" + tfF.getText().replace("'", "''") + "'");
+                if (!rs.next()) {
+                    res.setText("Obat tidak ditemukan");
+                    return;
+                }
+                int sistem = rs.getInt("quantity");
+                double persen = sistem > 0 ? (Math.abs(fisik - sistem) * 100.0 / sistem) : 100;
+                if (persen > 5.0 && Math.abs(fisik - sistem) > 1) {
+                    int confirm = JOptionPane.showConfirmDialog(p,
+                            "SELISIH TINGGI (" + String.format("%.1f", persen) + "%)\n"
+                                    + "Sistem: " + sistem + " | Fisik: " + fisik + " | Selisih: " + (fisik - sistem)
+                                    + "\n\nApakah Anda yakin ingin menyesuaikan stok?",
+                            "Approval Penyesuaian Stok", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
+                    if (confirm != JOptionPane.YES_OPTION) {
+                        res.setText("Penyesuaian dibatalkan");
+                        return;
+                    }
+                }
+                c.createStatement().executeUpdate("UPDATE obat SET quantity = " + fisik + " WHERE no_faktur = '"
+                        + tfF.getText().replace("'", "''") + "'");
+                res.setText("Stok disesuaikan ke " + fisik + " unit (selisih " + String.format("%.1f", persen) + "%)");
+                refreshOpn(model);
+            } catch (Exception ex) {
+                res.setText("Error: " + ex.getMessage());
+            }
+        });
+
+        refreshOpn(model);
+        JPanel top = new JPanel(new BorderLayout(0, 12));
+        top.setOpaque(false);
+        top.add(header, BorderLayout.NORTH);
+        top.add(formCard, BorderLayout.CENTER);
+        p.add(top, BorderLayout.NORTH);
+        p.add(styledScroll(table), BorderLayout.CENTER);
+        return p;
+    }
+
+    private void refreshOpn(DefaultTableModel m) {
+        m.setRowCount(0);
+        try (Connection c = DriverManager.getConnection(DB, U, P);
+                ResultSet rs = c.createStatement().executeQuery("SELECT * FROM stok_opname ORDER BY tanggal DESC")) {
+            while (rs.next())
+                m.addRow(new Object[] { rs.getTimestamp("tanggal"), rs.getString("no_faktur"),
+                        rs.getString("nama_obat"), rs.getInt("stok_sistem"), rs.getInt("stok_fisik"),
+                        rs.getInt("selisih"), rs.getString("status") });
+        } catch (Exception ignored) {
+        }
+    }
+
+    private JPanel createReportsPanel() {
+        JPanel p = new JPanel(new BorderLayout(16, 16));
+        p.setOpaque(false);
+        p.setBorder(BorderFactory.createEmptyBorder(24, 24, 24, 24));
+        JLabel header = new JLabel("Laporan & Export");
+        header.setFont(TITLE);
+        header.setForeground(TEXT);
+
+        JPanel controls = card(null);
+        JPanel row = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 0));
+        row.setOpaque(false);
+        JTextField tfDate = styledField("YYYY-MM-DD");
+        tfDate.setText(LocalDate.now().toString());
+        tfDate.setPreferredSize(new Dimension(140, 40));
+        JButton b1 = styledBtn("\uD83D\uDCC8 Omset Harian", PRIMARY),
+                b2 = styledBtn("\uD83D\uDCE5 Excel Omset", SUCCESS),
+                b3 = styledBtn("\uD83D\uDCE5 Excel PBF", new Color(99, 102, 241)),
+                b4 = styledBtn("\uD83D\uDCC4 PDF Report", DANGER);
+        row.add(tfDate);
+        row.add(b1);
+        row.add(b2);
+        row.add(b3);
+        row.add(b4);
+        controls.add(row, BorderLayout.CENTER);
+        JTextArea res = new JTextArea(2, 40);
+        res.setEditable(false);
+        res.setFont(new Font("Segoe UI", Font.BOLD, 16));
+        res.setBackground(new Color(248, 250, 252));
+        res.setBorder(BorderFactory.createEmptyBorder(12, 16, 12, 16));
+        controls.add(res, BorderLayout.SOUTH);
+
+        DefaultTableModel model = new DefaultTableModel(
+                new String[] { "Waktu", "Obat", "Tipe", "Qty", "PBF", "H.Beli", "Total" }, 0);
+        JTable table = new JTable(model);
+
+        b1.addActionListener(e -> {
+            try (Connection c = DriverManager.getConnection(DB, U, P)) {
+                LocalDate d = LocalDate.parse(tfDate.getText());
+                double t = 0;
+                ResultSet rs = c.createStatement().executeQuery(
+                        "SELECT COALESCE(SUM(total_harga),0) as t FROM riwayat_klinis WHERE tgl_kunjungan = '" + d
+                                + "'");
+                if (rs.next())
+                    t += rs.getDouble("t");
+                ResultSet rs2 = c.createStatement().executeQuery(
+                        "SELECT COALESCE(SUM(total_harga),0) as t FROM penjualan WHERE CAST(tanggal AS DATE) = '" + d
+                                + "'");
+                if (rs2.next())
+                    t += rs2.getDouble("t");
+                res.setText("\uD83D\uDCB0 Omset " + d + ": Rp " + fmt(t));
+            } catch (Exception ex) {
+                res.setText("\u274C " + ex.getMessage());
+            }
+        });
+        b2.addActionListener(e -> exportOmsetExcel());
+        b3.addActionListener(e -> exportPBFExcel());
+        b4.addActionListener(e -> exportPDF());
+
+        refreshRep(model);
+        JPanel top = new JPanel(new BorderLayout(0, 12));
+        top.setOpaque(false);
+        top.add(header, BorderLayout.NORTH);
+        top.add(controls, BorderLayout.CENTER);
+        p.add(top, BorderLayout.NORTH);
+        p.add(styledScroll(table), BorderLayout.CENTER);
+        return p;
+    }
+
+    private void refreshRep(DefaultTableModel m) {
+        m.setRowCount(0);
+        try (Connection c = DriverManager.getConnection(DB, U, P);
+                ResultSet rs = c.createStatement()
+                        .executeQuery("SELECT * FROM riwayat_barang ORDER BY timestamp DESC")) {
+            while (rs.next())
+                m.addRow(new Object[] { rs.getTimestamp("timestamp"), rs.getString("nama_obat"), rs.getString("tipe"),
+                        rs.getInt("quantity"), rs.getString("nama_pbf"), fmt(rs.getDouble("harga_beli")),
+                        fmt(rs.getDouble("total_harga")) });
+        } catch (Exception ignored) {
+        }
+    }
+
+    private JPanel createPenjualanPanel() {
+        JPanel p = new JPanel(new BorderLayout(16, 16));
+        p.setOpaque(false);
+        p.setBorder(BorderFactory.createEmptyBorder(24, 24, 24, 24));
+        JLabel header = new JLabel("Penjualan Langsung (OTC)");
+        header.setFont(TITLE);
+        header.setForeground(TEXT);
+
+        JPanel formCard = card(null);
+        JPanel row = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 0));
+        row.setOpaque(false);
+        JTextField tfB = styledField("Nama Pembeli"), tfO = styledField("Nama Obat"), tfQ = styledField("Qty");
+        tfB.setPreferredSize(new Dimension(200, 40));
+        tfO.setPreferredSize(new Dimension(200, 40));
+        tfQ.setPreferredSize(new Dimension(80, 40));
+        JButton btnA = styledBtn("\u2795 Tambah", PRIMARY), btnP = styledBtn("\u2705 Proses", SUCCESS);
+        JLabel lblT = new JLabel("Total: Rp 0");
+        lblT.setFont(new Font("Segoe UI", Font.BOLD, 18));
+        lblT.setForeground(PRIMARY);
+        row.add(tfB);
+        row.add(tfO);
+        row.add(tfQ);
+        row.add(btnA);
+        row.add(lblT);
+        row.add(btnP);
+        formCard.add(row, BorderLayout.CENTER);
+
+        DefaultTableModel cart = new DefaultTableModel(new String[] { "Obat", "Qty", "Harga", "Subtotal" }, 0);
+        JTable cartT = new JTable(cart);
+        DefaultTableModel hist = new DefaultTableModel(new String[] { "No Transaksi", "Tanggal", "Pembeli", "Total" },
+                0);
+        JTable histT = new JTable(hist);
+
+        btnA.addActionListener(e -> {
+            try (Connection c = DriverManager.getConnection(DB, U, P)) {
+                String nama = tfO.getText();
+                int qty = Integer.parseInt(tfQ.getText());
+                ResultSet rs = c.createStatement()
+                        .executeQuery("SELECT harga_jual_apotek, harga_beli FROM obat WHERE nama_obat = '"
+                                + nama.replace("'", "''") + "'");
+                if (rs.next()) {
+                    double h = rs.getDouble("harga_jual_apotek");
+                    if (h == 0)
+                        h = rs.getDouble("harga_beli");
+                    cart.addRow(new Object[] { nama, qty, fmt(h), fmt(h * qty) });
+                    double t = 0;
+                    for (int i = 0; i < cart.getRowCount(); i++)
+                        t += parseFmt((String) cart.getValueAt(i, 3));
+                    lblT.setText("Total: Rp " + fmt(t));
+                } else
+                    showError(p, "Obat tidak ditemukan");
+                tfO.setText("");
+                tfQ.setText("");
+            } catch (Exception ex) {
+                showError(p, ex.getMessage());
+            }
+        });
+
+        btnP.addActionListener(e -> {
+            try (Connection c = DriverManager.getConnection(DB, U, P)) {
+                String noTrx = "TRX-" + System.currentTimeMillis();
+                double gt = 0;
+                for (int i = 0; i < cart.getRowCount(); i++) {
+                    String nama = (String) cart.getValueAt(i, 0);
+                    int qty = (int) cart.getValueAt(i, 1);
+                    double sub = parseFmt((String) cart.getValueAt(i, 3));
+                    gt += sub;
+                    c.createStatement().executeUpdate("UPDATE obat SET quantity = quantity - " + qty
+                            + " WHERE nama_obat = '" + nama.replace("'", "''") + "'");
+                }
+                PreparedStatement ps = c.prepareStatement(
+                        "INSERT INTO penjualan(no_transaksi,tanggal,nama_pembeli,total_harga) VALUES(?,?,?,?)");
+                ps.setString(1, noTrx);
+                ps.setTimestamp(2, Timestamp.valueOf(LocalDateTime.now()));
+                ps.setString(3, tfB.getText());
+                ps.setDouble(4, gt);
+                ps.executeUpdate();
+                showSuccess(p, "Penjualan berhasil! " + noTrx + " | Rp " + fmt(gt));
+                cart.setRowCount(0);
+                lblT.setText("Total: Rp 0");
+                tfB.setText("");
+                refreshHist(hist);
+            } catch (Exception ex) {
+                showError(p, ex.getMessage());
+            }
+        });
+
+        refreshHist(hist);
+        JPanel top = new JPanel(new BorderLayout(0, 12));
+        top.setOpaque(false);
+        top.add(header, BorderLayout.NORTH);
+        top.add(formCard, BorderLayout.CENTER);
+        JSplitPane split = new JSplitPane(JSplitPane.VERTICAL_SPLIT, styledScroll(cartT), styledScroll(histT));
+        split.setDividerLocation(180);
+        split.setOpaque(false);
+        p.add(top, BorderLayout.NORTH);
+        p.add(split, BorderLayout.CENTER);
+        return p;
+    }
+
+    private void refreshHist(DefaultTableModel m) {
+        m.setRowCount(0);
+        try (Connection c = DriverManager.getConnection(DB, U, P);
+                ResultSet rs = c.createStatement().executeQuery("SELECT * FROM penjualan ORDER BY tanggal DESC")) {
+            while (rs.next())
+                m.addRow(new Object[] { rs.getString("no_transaksi"), rs.getTimestamp("tanggal"),
+                        rs.getString("nama_pembeli"), "Rp " + fmt(rs.getDouble("total_harga")) });
+        } catch (Exception ignored) {
+        }
+    }
+
+    private JPanel createMIMSPanel() {
+        JPanel p = new JPanel(new BorderLayout(16, 16));
+        p.setOpaque(false);
+        p.setBorder(BorderFactory.createEmptyBorder(24, 24, 24, 24));
+        JLabel header = new JLabel("MIMS Apotek - Referensi Obat");
+        header.setFont(TITLE);
+        header.setForeground(TEXT);
+
+        JPanel searchCard = card(null);
+        JPanel row = new JPanel(new FlowLayout(FlowLayout.LEFT, 12, 0));
+        row.setOpaque(false);
+        JTextField tfS = styledField("Cari obat...");
+        tfS.setPreferredSize(new Dimension(350, 40));
+        JButton btnS = styledBtn("\uD83D\uDD0D Cari", PRIMARY);
+        row.add(tfS);
+        row.add(btnS);
+        searchCard.add(row, BorderLayout.CENTER);
+
+        DefaultTableModel model = new DefaultTableModel(new String[] { "Nama Obat", "Golongan", "Satuan",
+                "Indikasi/Kegunaan", "H.Jual Apotek", "H.Plot", "Stok" }, 0);
+        JTable table = new JTable(model);
+
+        Runnable search = () -> {
+            model.setRowCount(0);
+            String kw = tfS.getText().trim();
+            String sql = kw.isEmpty() ? "SELECT * FROM obat ORDER BY nama_obat"
+                    : "SELECT * FROM obat WHERE LOWER(nama_obat) LIKE '%" + kw.toLowerCase().replace("'", "''")
+                            + "%' ORDER BY nama_obat";
+            try (Connection c = DriverManager.getConnection(DB, U, P);
+                    ResultSet rs = c.createStatement().executeQuery(sql)) {
+                while (rs.next())
+                    model.addRow(new Object[] { rs.getString("nama_obat"), rs.getString("golongan"),
+                            rs.getString("satuan"), rs.getString("indikasi"), fmt(rs.getDouble("harga_jual_apotek")),
+                            fmt(rs.getDouble("harga_plot")), rs.getInt("quantity") });
+            } catch (Exception ignored) {
+            }
+        };
+        btnS.addActionListener(e -> search.run());
+        tfS.addActionListener(e -> search.run());
+        search.run();
+
+        JPanel top = new JPanel(new BorderLayout(0, 12));
+        top.setOpaque(false);
+        top.add(header, BorderLayout.NORTH);
+        top.add(searchCard, BorderLayout.CENTER);
+        p.add(top, BorderLayout.NORTH);
+        p.add(styledScroll(table), BorderLayout.CENTER);
+        return p;
+    }
+
+    private void exportOmsetExcel() {
+        try {
+            JFileChooser fc = new JFileChooser();
+            fc.setSelectedFile(new File("Laporan_Omset.xlsx"));
+            if (fc.showSaveDialog(this) != JFileChooser.APPROVE_OPTION)
+                return;
+            try (XSSFWorkbook wb = new XSSFWorkbook(); Connection c = DriverManager.getConnection(DB, U, P)) {
+                XSSFCellStyle hs = wb.createCellStyle();
+                XSSFFont hf = wb.createFont();
+                hf.setBold(true);
+                hs.setFont(hf);
+                XSSFSheet s = wb.createSheet("Omset Resep");
+                XSSFRow h = s.createRow(0);
+                String[] cols = { "No", "Tanggal", "Pasien", "Dokter", "Obat", "Qty", "Harga", "Tuslah", "Embalase",
+                        "Total" };
+                for (int i = 0; i < cols.length; i++) {
+                    XSSFCell cell = h.createCell(i);
+                    cell.setCellValue(cols[i]);
+                    cell.setCellStyle(hs);
+                }
+                ResultSet rs = c.createStatement()
+                        .executeQuery("SELECT * FROM riwayat_klinis ORDER BY tgl_kunjungan DESC");
+                int row = 1;
+                double total = 0;
+                while (rs.next()) {
+                    XSSFRow r = s.createRow(row);
+                    r.createCell(0).setCellValue(row);
+                    r.createCell(1).setCellValue(String.valueOf(rs.getDate("tgl_kunjungan")));
+                    r.createCell(2).setCellValue(rs.getString("nama_pasien"));
+                    r.createCell(3).setCellValue(rs.getString("nama_dokter"));
+                    r.createCell(4).setCellValue(rs.getString("nama_obat"));
+                    r.createCell(5).setCellValue(rs.getInt("jumlah_obat"));
+                    r.createCell(6).setCellValue(rs.getDouble("harga_obat"));
+                    r.createCell(7).setCellValue(rs.getDouble("tuslah"));
+                    r.createCell(8).setCellValue(rs.getDouble("embalase"));
+                    r.createCell(9).setCellValue(rs.getDouble("total_harga"));
+                    total += rs.getDouble("total_harga");
+                    row++;
+                }
+                XSSFRow tr = s.createRow(row);
+                tr.createCell(8).setCellValue("TOTAL:");
+                tr.createCell(9).setCellValue(total);
+                for (int i = 0; i < cols.length; i++)
+                    s.autoSizeColumn(i);
+                try (FileOutputStream fos = new FileOutputStream(fc.getSelectedFile())) {
+                    wb.write(fos);
+                }
+                showSuccess(this, "Excel berhasil disimpan!");
+            }
         } catch (Exception ex) {
-            log("❌ Error Simpan: " + ex.getMessage());
+            showError(this, ex.getMessage());
         }
     }
 
-    private void handleAnalisisResep() {
-        txtResult.setText("");
-        log("🚀 Analyzing Prescription (CDSS)...");
-        String obat = (String) cbObatResep.getSelectedItem();
-        double dosis = 0, berat = 0, gfr = 120;
-        int usia = 0;
+    private void exportPBFExcel() {
         try {
-            dosis = Double.parseDouble(txtDosis.getText());
-            berat = Double.parseDouble(txtBB.getText());
-            usia = Integer.parseInt(txtUsia.getText());
-            if (!txtGFR.getText().isEmpty())
-                gfr = Double.parseDouble(txtGFR.getText());
-        } catch (NumberFormatException e) {
-            log("❌ Invalid Number Format");
-            return;
-        }
-
-        boolean aman = true;
-        // Rules
-        String alergi = (String) cbAlergi.getSelectedItem();
-        if ("Antibiotik".equals(alergi) && (obat.equals("Amoxicillin") || obat.equals("Cefadroxil"))) {
-            log("⛔ ALERGI ANTIBIOTIK! Jangan beri " + obat);
-            aman = false;
-        }
-        if (gfr < 60 && (obat.equals("Ketorolac") || obat.equals("Asam Mefenamat"))) {
-            log("⚠️ Ginjal Bermasalah (GFR " + gfr + "). Hindari NSAID.");
-            aman = false;
-        }
-
-        String medikasiLain = txtMedikasiLain.getText().toLowerCase();
-        if (medikasiLain.contains("warfarin") && (obat.equals("Ketorolac") || obat.equals("Asam Mefenamat"))) {
-            log("❌ BAHAYA: Interaksi Warfarin + NSAID (Pendarahan!)");
-            aman = false;
-        }
-
-        if (aman && cekStokDatabase(obat, 1)) {
-            log("✅ Resep Valid & Aman. Silakan Dispense.");
-            btnDispense.setEnabled(true);
-        } else {
-            log("❌ Resep Tidak Aman / Stok Habis.");
-            btnDispense.setEnabled(false);
-        }
-    }
-
-    private void handleDispense() {
-        String obat = (String) cbObatResep.getSelectedItem();
-        String pin = JOptionPane.showInputDialog("PIN Apoteker:");
-        if (pin == null)
-            return;
-
-        try (Connection conn = getConnection()) {
-            String sql = "UPDATE obat SET quantity = quantity - 1 WHERE nama_obat = ? AND quantity > 0 LIMIT 1";
-            PreparedStatement st = conn.prepareStatement(sql);
-            st.setString(1, obat);
-            int aff = st.executeUpdate();
-            if (aff > 0) {
-                // 3. Simpan Riwayat Klinis
-                String logSql = "INSERT INTO riwayat_klinis (nik, nama_pasien, diagnosa, nama_obat, dosis, tgl_kunjungan) VALUES (?, ?, ?, ?, ?, CURRENT_DATE)";
-                PreparedStatement pstmt = conn.prepareStatement(logSql);
-                pstmt.setString(1, txtNik.getText());
-                pstmt.setString(2, txtNamaPasien.getText());
-                pstmt.setString(3, txtDiagnosa.getText());
-                pstmt.setString(4, obat);
-                pstmt.setString(5, txtDosis.getText());
-                pstmt.executeUpdate();
-
-                log("✅ Dispensing Succesful: " + obat);
-                btnDispense.setEnabled(false);
-            } else {
-                JOptionPane.showMessageDialog(this, "Stok Habis!");
+            JFileChooser fc = new JFileChooser();
+            fc.setSelectedFile(new File("Laporan_PBF.xlsx"));
+            if (fc.showSaveDialog(this) != JFileChooser.APPROVE_OPTION)
+                return;
+            try (XSSFWorkbook wb = new XSSFWorkbook(); Connection c = DriverManager.getConnection(DB, U, P)) {
+                XSSFCellStyle hs = wb.createCellStyle();
+                XSSFFont hf = wb.createFont();
+                hf.setBold(true);
+                hs.setFont(hf);
+                XSSFSheet s = wb.createSheet("PBF");
+                XSSFRow h = s.createRow(0);
+                String[] cols = { "No", "Waktu", "Obat", "Batch", "PBF", "Qty", "H.Beli", "Total" };
+                for (int i = 0; i < cols.length; i++) {
+                    XSSFCell cell = h.createCell(i);
+                    cell.setCellValue(cols[i]);
+                    cell.setCellStyle(hs);
+                }
+                ResultSet rs = c.createStatement()
+                        .executeQuery("SELECT * FROM riwayat_barang WHERE tipe='MASUK' ORDER BY timestamp DESC");
+                int row = 1;
+                double total = 0;
+                while (rs.next()) {
+                    XSSFRow r = s.createRow(row);
+                    r.createCell(0).setCellValue(row);
+                    r.createCell(1).setCellValue(String.valueOf(rs.getTimestamp("timestamp")));
+                    r.createCell(2).setCellValue(rs.getString("nama_obat"));
+                    r.createCell(3).setCellValue(rs.getString("nomor_batch"));
+                    r.createCell(4).setCellValue(rs.getString("nama_pbf"));
+                    r.createCell(5).setCellValue(rs.getInt("quantity"));
+                    r.createCell(6).setCellValue(rs.getDouble("harga_beli"));
+                    r.createCell(7).setCellValue(rs.getDouble("total_harga"));
+                    total += rs.getDouble("total_harga");
+                    row++;
+                }
+                XSSFRow tr = s.createRow(row);
+                tr.createCell(6).setCellValue("TOTAL:");
+                tr.createCell(7).setCellValue(total);
+                for (int i = 0; i < cols.length; i++)
+                    s.autoSizeColumn(i);
+                try (FileOutputStream fos = new FileOutputStream(fc.getSelectedFile())) {
+                    wb.write(fos);
+                }
+                showSuccess(this, "Excel PBF berhasil disimpan!");
             }
-        } catch (Exception e) {
-            e.printStackTrace();
+        } catch (Exception ex) {
+            showError(this, ex.getMessage());
         }
     }
 
-    private void handleLoadStok() {
-        // Just hint user to scan
-        JOptionPane.showMessageDialog(this, "Scan an Item Barcode to load System Stock!");
-        txtScanStok.requestFocus();
-    }
-
-    private void handleCekStok() {
+    private void exportPDF() {
         try {
-            int sys = Integer.parseInt(txtStokSistem.getText());
-            int phy = Integer.parseInt(txtStokFisik.getText());
-            int diff = phy - sys;
-            log("📊 Stock Audit | Sys: " + sys + " | Phy: " + phy + " | Diff: " + diff);
-        } catch (Exception e) {
-            log("❌ Invalid Input");
-        }
-    }
-
-    private void handleScanBarcodeAlur1() {
-        String bc = txtScanBarcode.getText();
-        try (Connection c = getConnection()) {
-            PreparedStatement ps = c.prepareStatement("SELECT * FROM obat WHERE barcode=?");
-            ps.setString(1, bc);
-            ResultSet rs = ps.executeQuery();
-            if (rs.next()) {
-                txtNamaObat.setText(rs.getString("nama_obat"));
-                txtBatch.setText(rs.getString("nomor_batch"));
-                txtSupplier.setText(rs.getString("supplier"));
-                txtHarga.setText(String.valueOf(rs.getDouble("harga_beli")));
-                log("🔍 Item Found: " + rs.getString("nama_obat"));
-                txtQty.requestFocus();
-            } else {
-                log("ℹ️ New Item. Please fill details.");
-                txtNamaObat.requestFocus();
+            JFileChooser fc = new JFileChooser();
+            fc.setSelectedFile(new File("Laporan_Apotek.pdf"));
+            if (fc.showSaveDialog(this) != JFileChooser.APPROVE_OPTION)
+                return;
+            Document doc = new Document();
+            PdfWriter.getInstance(doc, new FileOutputStream(fc.getSelectedFile()));
+            doc.open();
+            doc.add(new Paragraph("LAPORAN APOTEK - " + LocalDate.now()));
+            doc.add(new Paragraph(" "));
+            try (Connection c = DriverManager.getConnection(DB, U, P)) {
+                ResultSet rs = c.createStatement().executeQuery("SELECT * FROM riwayat_barang ORDER BY timestamp DESC");
+                while (rs.next())
+                    doc.add(new Paragraph(rs.getTimestamp("timestamp") + " | " + rs.getString("tipe") + " | "
+                            + rs.getString("nama_obat") + " | Qty: " + rs.getInt("quantity") + " | PBF: "
+                            + rs.getString("nama_pbf")));
             }
-        } catch (Exception e) {
+            doc.close();
+            showSuccess(this, "PDF berhasil disimpan!");
+        } catch (Exception ex) {
+            showError(this, ex.getMessage());
         }
     }
 
-    private void handleScanResepOCR() {
-        JFileChooser fc = new JFileChooser();
-        if (fc.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
-            // Mock OCR
-            new SwingWorker<Void, Void>() {
-                protected Void doInBackground() throws Exception {
-                    Thread.sleep(1000);
-                    return null;
+    private void ensureTableExists() {
+        try (Connection c = DriverManager.getConnection(DB, U, P); Statement s = c.createStatement()) {
+            s.execute(
+                    "CREATE TABLE IF NOT EXISTS obat (id BIGINT AUTO_INCREMENT PRIMARY KEY, nama_obat VARCHAR(255), nomor_batch VARCHAR(255), tgl_produksi DATE, tgl_expired DATE, supplier VARCHAR(255), no_faktur VARCHAR(255) UNIQUE, satuan VARCHAR(100), nama_pbf VARCHAR(255), harga_beli DOUBLE, harga_jual_apotek DOUBLE, harga_plot DOUBLE, harga_beli_ppn DOUBLE, quantity INT, golongan VARCHAR(100), indikasi VARCHAR(1000))");
+            s.execute(
+                    "CREATE TABLE IF NOT EXISTS riwayat_barang (id BIGINT AUTO_INCREMENT PRIMARY KEY, nama_obat VARCHAR(255), nomor_batch VARCHAR(255), tipe VARCHAR(20), quantity INT, timestamp TIMESTAMP, nama_pbf VARCHAR(255), harga_beli DOUBLE, total_harga DOUBLE)");
+            s.execute(
+                    "CREATE TABLE IF NOT EXISTS riwayat_klinis (id BIGINT AUTO_INCREMENT PRIMARY KEY, nik VARCHAR(50), nama_pasien VARCHAR(255), diagnosa VARCHAR(500), nama_obat VARCHAR(255), dosis VARCHAR(100), tgl_kunjungan DATE, nama_dokter VARCHAR(255), no_praktek VARCHAR(100), nama_rumah_sakit VARCHAR(255), harga_obat DOUBLE, jumlah_obat INT, tuslah DOUBLE, embalase DOUBLE, total_harga DOUBLE)");
+            s.execute(
+                    "CREATE TABLE IF NOT EXISTS stok_opname (id BIGINT AUTO_INCREMENT PRIMARY KEY, nama_obat VARCHAR(255), no_faktur VARCHAR(255), stok_sistem INT, stok_fisik INT, selisih INT, status VARCHAR(50), tanggal TIMESTAMP)");
+            s.execute(
+                    "CREATE TABLE IF NOT EXISTS penjualan (id BIGINT AUTO_INCREMENT PRIMARY KEY, no_transaksi VARCHAR(100) UNIQUE, tanggal TIMESTAMP, nama_pembeli VARCHAR(255), total_harga DOUBLE)");
+            s.execute(
+                    "CREATE TABLE IF NOT EXISTS detail_penjualan (id BIGINT AUTO_INCREMENT PRIMARY KEY, penjualan_id BIGINT, nama_obat VARCHAR(255), harga_jual DOUBLE, jumlah INT, subtotal DOUBLE)");
+            String[][] alts = { { "obat", "no_faktur VARCHAR(255)" }, { "obat", "satuan VARCHAR(100)" },
+                    { "obat", "nama_pbf VARCHAR(255)" }, { "obat", "harga_jual_apotek DOUBLE" },
+                    { "obat", "harga_plot DOUBLE" }, { "obat", "harga_beli_ppn DOUBLE" },
+                    { "obat", "golongan VARCHAR(100)" }, { "obat", "indikasi VARCHAR(1000)" },
+                    { "riwayat_barang", "nama_pbf VARCHAR(255)" }, { "riwayat_barang", "harga_beli DOUBLE" },
+                    { "riwayat_barang", "total_harga DOUBLE" }, { "riwayat_klinis", "nama_dokter VARCHAR(255)" },
+                    { "riwayat_klinis", "no_praktek VARCHAR(100)" },
+                    { "riwayat_klinis", "nama_rumah_sakit VARCHAR(255)" }, { "riwayat_klinis", "harga_obat DOUBLE" },
+                    { "riwayat_klinis", "jumlah_obat INT" }, { "riwayat_klinis", "tuslah DOUBLE" },
+                    { "riwayat_klinis", "embalase DOUBLE" }, { "riwayat_klinis", "total_harga DOUBLE" } };
+            for (String[] a : alts)
+                try {
+                    s.execute("ALTER TABLE " + a[0] + " ADD COLUMN IF NOT EXISTS " + a[1]);
+                } catch (Exception ignored) {
                 }
-
-                protected void done() {
-                    txtNamaPasien.setText("Budi (AI Extracted)");
-                    txtDiagnosa.setText("ISPA (AI)");
-                    cbObatResep.setSelectedItem("Amoxicillin");
-                    txtDosis.setText("500");
-                    log("✅ OCR Completed.");
-                }
-            }.execute();
-        }
-    }
-
-    private void handleScanStokOpname() {
-        String bc = txtScanStok.getText().trim();
-        if (bc.isEmpty())
-            return;
-
-        try (Connection c = getConnection()) {
-            PreparedStatement ps = c.prepareStatement("SELECT nama_obat, quantity FROM obat WHERE barcode=?");
-            ps.setString(1, bc);
-            ResultSet rs = ps.executeQuery();
-            if (rs.next()) {
-                String nama = rs.getString("nama_obat");
-                int qty = rs.getInt("quantity");
-
-                txtStokSistem.setText(String.valueOf(qty));
-
-                // UNLOCK NEXT STEPS
-                txtStokFisik.setEnabled(true);
-                txtStokFisik.setBackground(Color.WHITE);
-                txtStokFisik.requestFocus();
-                btnCekStok.setEnabled(true);
-
-                log("🔍 Item Found: " + nama + " | System Stock: " + qty);
-            } else {
-                txtStokSistem.setText("NOT FOUND");
-                txtStokFisik.setEnabled(false);
-                btnCekStok.setEnabled(false);
-                log("❌ Barcode not found in database.");
-            }
         } catch (Exception e) {
-            e.printStackTrace();
+            System.err.println("DB: " + e.getMessage());
         }
     }
 
-    private boolean cekStokDatabase(String nama, int qty) {
-        try (Connection c = getConnection()) {
-            PreparedStatement ps = c.prepareStatement("SELECT SUM(quantity) FROM obat WHERE nama_obat=?");
-            ps.setString(1, nama);
-            ResultSet rs = ps.executeQuery();
-            if (rs.next())
-                return rs.getInt(1) >= qty;
-        } catch (Exception e) {
-        }
-        return false;
+    private String fmt(double v) {
+        return String.format("%,.0f", v);
     }
 
-    private void cetakLaporan(String filename, int type) {
-        Document document = new Document(PageSize.A4.rotate()); // Landscape layout
+    private double parseNum(JTextField f) {
         try {
-            PdfWriter.getInstance(document, new FileOutputStream(filename));
-            document.open();
-
-            // Header
-            com.lowagie.text.Font titleFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 18);
-            String title = (type == 1) ? "LAPORAN KEUANGAN & LALU LINTAS BARANG"
-                    : (type == 2) ? "LAPORAN STOK & INVENTORY" : "LAPORAN DATA PASIEN & KLINIS";
-
-            document.add(new Paragraph("MY APOTEK PROFESSIONAL SYSTEM", titleFont));
-            document.add(new Paragraph(title));
-            document.add(new Paragraph("Generated: " + LocalDate.now() + "\n\n"));
-
-            try (Connection conn = getConnection()) {
-                PdfPTable table = null;
-
-                if (type == 1) {
-                    // 1. Laporan Transaksi (Riwayat Barang)
-                    table = new PdfPTable(5);
-                    addHeader(table, "ID", "Nama Barang", "Batch", "Tipe", "Qty");
-                    ResultSet rs = conn.createStatement()
-                            .executeQuery("SELECT * FROM riwayat_barang ORDER BY timestamp DESC");
-                    while (rs.next()) {
-                        table.addCell(String.valueOf(rs.getInt("id")));
-                        table.addCell(rs.getString("nama_obat"));
-                        table.addCell(rs.getString("nomor_batch"));
-                        table.addCell(rs.getString("tipe"));
-                        table.addCell(String.valueOf(rs.getInt("quantity")));
-                    }
-                } else if (type == 2) {
-                    // 2. Laporan Stok (Inventory)
-                    table = new PdfPTable(7);
-                    addHeader(table, "Nama Obat", "Batch", "Exp Date", "Supplier", "Harga Beli", "Stok", "Barcode");
-                    ResultSet rs = conn.createStatement().executeQuery("SELECT * FROM obat ORDER BY nama_obat ASC");
-                    while (rs.next()) {
-                        table.addCell(rs.getString("nama_obat"));
-                        table.addCell(rs.getString("nomor_batch"));
-                        table.addCell(rs.getString("tgl_expired"));
-                        table.addCell(rs.getString("supplier"));
-                        table.addCell(String.valueOf(rs.getDouble("harga_beli")));
-                        table.addCell(String.valueOf(rs.getInt("quantity")));
-                        table.addCell(rs.getString("barcode"));
-                    }
-                } else if (type == 3) {
-                    // 3. Laporan Klinis
-                    table = new PdfPTable(6);
-                    addHeader(table, "Tgl", "Pasien", "Diagnosa", "Obat", "Dosis", "NIK");
-                    ResultSet rs = conn.createStatement()
-                            .executeQuery("SELECT * FROM riwayat_klinis ORDER BY tgl_kunjungan DESC");
-                    while (rs.next()) {
-                        table.addCell(rs.getString("tgl_kunjungan"));
-                        table.addCell(rs.getString("nama_pasien"));
-                        table.addCell(rs.getString("diagnosa"));
-                        table.addCell(rs.getString("nama_obat"));
-                        table.addCell(rs.getString("dosis"));
-                        table.addCell(rs.getString("nik"));
-                    }
-                }
-
-                if (table != null) {
-                    table.setWidthPercentage(100);
-                    document.add(table);
-                } else {
-                    document.add(new Paragraph("No data found for this report type."));
-                }
-            }
-
-            document.close();
-            log("📄 PDF Created: " + filename);
-            if (Desktop.isDesktopSupported())
-                Desktop.getDesktop().open(new File(filename));
+            return Double.parseDouble(f.getText());
         } catch (Exception e) {
-            log("❌ PDF Error: " + e.getMessage());
-            e.printStackTrace();
+            return 0;
         }
     }
 
-    private void addHeader(PdfPTable table, String... headers) {
-        for (String h : headers) {
-            PdfPCell cell = new PdfPCell(new Phrase(h, FontFactory.getFont(FontFactory.HELVETICA_BOLD)));
-            cell.setBackgroundColor(Color.LIGHT_GRAY);
-            table.addCell(cell);
+    private double parseFmt(String s) {
+        try {
+            return Double.parseDouble(s.replace("Rp ", "").replace(",", "").replace(".", "").trim());
+        } catch (Exception e) {
+            return 0;
         }
     }
 
-    private void ensureTableExists(Connection conn) throws SQLException {
-        conn.createStatement().execute(
-                "CREATE TABLE IF NOT EXISTS obat (id INT AUTO_INCREMENT PRIMARY KEY, nama_obat VARCHAR(255), nomor_batch VARCHAR(100), tgl_produksi DATE, tgl_expired DATE, supplier VARCHAR(100), harga_beli DOUBLE, quantity INT, barcode VARCHAR(50))");
-        conn.createStatement().execute(
-                "CREATE TABLE IF NOT EXISTS riwayat_klinis (id INT AUTO_INCREMENT PRIMARY KEY, nik VARCHAR(50), nama_pasien VARCHAR(100), diagnosa VARCHAR(100), nama_obat VARCHAR(100), dosis VARCHAR(50), tgl_kunjungan DATE)");
-        conn.createStatement().execute(
-                "CREATE TABLE IF NOT EXISTS riwayat_barang (id INT AUTO_INCREMENT PRIMARY KEY, nama_obat VARCHAR(100), nomor_batch VARCHAR(100), tipe VARCHAR(20), quantity INT, timestamp TIMESTAMP)");
+    private void showSuccess(Component p, String msg) {
+        JOptionPane.showMessageDialog(p, msg, "\u2705 Berhasil", JOptionPane.INFORMATION_MESSAGE);
     }
 
-    private Connection getConnection() throws SQLException {
-        return DriverManager.getConnection("jdbc:h2:file:./data/my_apotek;AUTO_SERVER=TRUE", "sa", "");
+    private void showError(Component p, String msg) {
+        JOptionPane.showMessageDialog(p, msg, "\u274C Error", JOptionPane.ERROR_MESSAGE);
     }
 
-    private void log(String msg) {
-        txtResult.append(msg + "\n");
-        txtResult.setCaretPosition(txtResult.getDocument().getLength());
+    public static void main(String[] args) {
+        try {
+            FlatLightLaf.setup();
+        } catch (Throwable ignored) {
+            try {
+                UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+            } catch (Exception e2) {
+            }
+        }
+        UIManager.put("Button.arc", 10);
+        UIManager.put("TextComponent.arc", 8);
+        UIManager.put("Component.arc", 8);
+        UIManager.put("ScrollBar.width", 10);
+        UIManager.put("ScrollBar.trackArc", 999);
+        UIManager.put("ScrollBar.thumbArc", 999);
+        SwingUtilities.invokeLater(() -> new MyApotekApp().setVisible(true));
     }
 }

@@ -1,0 +1,9 @@
+package com.example.My.Apotek.repository;
+
+import com.example.My.Apotek.model.DetailPenjualan;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+@Repository
+public interface DetailPenjualanRepository extends JpaRepository<DetailPenjualan, Long> {
+}

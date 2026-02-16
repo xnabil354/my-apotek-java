@@ -4,8 +4,6 @@ public class DesktopLauncher {
 
     public static void main(String[] args) {
         System.out.println("🚀 Starting MyApotek Desktop App...");
-
-        // Setup simple Logging to File for Debugging
         try {
             java.util.logging.FileHandler fh = new java.util.logging.FileHandler("MyApotek_Debug.log");
             java.util.logging.Logger.getLogger("").addHandler(fh);

@@ -1,74 +1,84 @@
 package com.example.My.Apotek.desktop;
 
-import org.springframework.web.bind.annotation.*;
+import com.example.My.Apotek.model.*;
+import com.example.My.Apotek.service.ApotekService;
 import org.springframework.beans.factory.annotation.Autowired;
-import com.example.My.Apotek.model.Obat;
-import com.example.My.Apotek.repository.ObatRepository;
-import java.util.List;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDate;
-import java.time.temporal.ChronoUnit;
+import java.util.List;
+import java.util.Map;
 
 @RestController
-@RequestMapping("/api/apotek")
-@CrossOrigin(origins = "*") // Allow frontend access
+@RequestMapping("/api")
 public class ApotekController {
 
     @Autowired
-    private ObatRepository obatRepository;
+    private ApotekService apotekService;
 
-    // --- ALUR 1: BARANG DATANG (CRUD) ---
-    @PostMapping("/obat")
-    public Obat tambahObat(@RequestBody Obat obat) {
-        return obatRepository.save(obat);
+    @PostMapping("/medicine")
+    public ResponseEntity<?> addMedicine(@RequestBody Medicine med) {
+        Obat obat = new Obat();
+        obat.setNamaObat(med.getNamaObat());
+        obat.setNomorBatch(med.getNomorBatch());
+        obat.setNoFaktur(med.getNoFaktur());
+        obat.setSupplier(med.getSupplier());
+        obat.setNamaPBF(med.getNamaPBF());
+        obat.setSatuan(med.getSatuan());
+        obat.setGolongan(med.getGolongan());
+        obat.setIndikasi(med.getIndikasi());
+        obat.setHargaBeli(med.getHargaBeli());
+        obat.setHargaJualApotek(med.getHargaJualApotek());
+        obat.setHargaPlot(med.getHargaPlot());
+        obat.setQuantity(med.getQuantity());
+        apotekService.tambahStokBarang(obat);
+        return ResponseEntity.ok(Map.of("status", "OK", "message", "Obat berhasil ditambahkan"));
     }
 
-    @GetMapping("/obat")
-    public List<Obat> getAllObat() {
-        return obatRepository.findAll();
+    @GetMapping("/medicine")
+    public ResponseEntity<?> getAllMedicine() {
+        return ResponseEntity.ok(apotekService.getAllObat());
     }
 
-    // Alur 1: Rule Pengingat Kadaluarsa [cite: 15]
-    @GetMapping("/cek-kadaluarsa")
-    public String cekKadaluarsa(@RequestParam String tglExp) {
-        LocalDate exp = LocalDate.parse(tglExp);
-        long selisihBulan = ChronoUnit.MONTHS.between(LocalDate.now(), exp);
+    @PostMapping("/prescription")
+    public ResponseEntity<?> processPrescription(@RequestBody PrescriptionRequest req) {
+        RiwayatKlinis resep = new RiwayatKlinis();
+        resep.setNamaPasien(req.getNamaPasien());
+        resep.setNamaObat(req.getNamaObat());
+        resep.setDosis(req.getDosis());
+        resep.setNamaDokter(req.getNamaDokter());
+        resep.setNoPraktek(req.getNoPraktek());
+        resep.setNamaRumahSakit(req.getNamaRumahSakit());
+        resep.setHargaObat(req.getHargaObat());
+        resep.setJumlahObat(req.getJumlahObat() > 0 ? req.getJumlahObat() : 1);
+        resep.setTuslah(req.getTuslah());
+        resep.setEmbalase(req.getEmbalase());
 
-        if (selisihBulan <= 3) {
-            return "ALERT: Stok hampir kadaluarsa (Kurang dari 3 bulan)!";
-        }
-        return "Stok dalam kondisi aman.";
+        List<String> warnings = apotekService.validsaiResep(resep, req.getRiwayatAlergi(), null, null);
+        boolean dispensed = apotekService.processDispense(resep);
+
+        return ResponseEntity.ok(Map.of(
+                "warnings", warnings,
+                "dispensed", dispensed,
+                "message", dispensed ? "Obat berhasil diserahkan" : "Gagal - stok tidak cukup"));
     }
 
-    // Alur 2: Rule Engine Resep (Klinis)
-    @PostMapping("/proses-resep")
-    public String prosesResep(@RequestBody PrescriptionRequest req) {
-        // Rule: Cek Alergi [cite: 20]
-        if (req.getRiwayatAlergi().equalsIgnoreCase(req.getNamaObat())) {
-            return "❌ BERBAHAYA: Kontraindikasi! Pasien alergi terhadap obat ini.";
+    @PostMapping("/stokopname")
+    public ResponseEntity<?> stokOpname(@RequestBody Map<String, Object> body) {
+        String noFaktur = (String) body.get("noFaktur");
+        int fisik = ((Number) body.get("stokFisik")).intValue();
+        StokOpname result = apotekService.performStokOpname(noFaktur, fisik);
+        if (result == null) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Obat tidak ditemukan"));
         }
-
-        // Rule: Cek Dosis Anak (Usia < 12)
-        if (req.getUsia() < 12 && req.getDosis() > 500) {
-            return "⚠️ PERINGATAN: Dosis terlalu tinggi untuk pasien anak.";
-        }
-
-        // Rule: Cek Fungsi Ginjal (Simulasi)
-        if (req.getUsia() > 65) {
-            return "⚠️ PERINGATAN: Pasien Lansia, harap cek fungsi ginjal sebelum dispensing.";
-        }
-
-        return "✅ AMAN: Resep tervalidasi oleh Rule Engine.";
+        return ResponseEntity.ok(result);
     }
 
-    // Alur 3: Rule Stok Opname
-    @GetMapping("/stok-opname")
-    public String hitungStok(@RequestParam double fisik, @RequestParam double sistem) {
-        double selisihPersen = Math.abs((fisik - sistem) / sistem) * 100;
-
-        if (selisihPersen > 5) {
-            return "STATUS: Butuh Approval (Selisih " + selisihPersen + "% > toleransi 5%)";
-        }
-        return "STATUS: Auto Adjust (Selisih " + selisihPersen + "% masuk toleransi)";
+    @PostMapping("/stokopname/adjust")
+    public ResponseEntity<?> adjustStok(@RequestBody Map<String, Object> body) {
+        String noFaktur = (String) body.get("noFaktur");
+        int fisik = ((Number) body.get("stokFisik")).intValue();
+        apotekService.adjustStok(noFaktur, fisik);
+        return ResponseEntity.ok(Map.of("status", "OK", "message", "Stok disesuaikan ke " + fisik));
     }
 }

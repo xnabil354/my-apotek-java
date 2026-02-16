@@ -1,17 +1,22 @@
 package com.example.My.Apotek.desktop;
 
 import lombok.Data;
-import java.time.LocalDate;
 
 @Data
 public class Medicine {
-
-    private String sku; // Scan/SKU [cite: 5]
-    private String namaObat; // Nama Obat/Barang [cite: 6]
-    private String nomorBatch; // Nomor Batch [cite: 7]
-    private LocalDate tglProduksi; // Tanggal Produksi [cite: 8]
-    private LocalDate tglExpired; // Tanggal Expired [cite: 9]
-    private String supplier; // Supplier [cite: 10]
-    private double hargaBeli; // Harga Beli [cite: 11]
-    private int quantity; // Quantity [cite: 12]
+    private String namaObat;
+    private String nomorBatch;
+    private String tglProduksi;
+    private String tglExpired;
+    private String supplier;
+    private String noFaktur;
+    private String namaPBF;
+    private String satuan;
+    private String golongan;
+    private String indikasi;
+    private double hargaBeli;
+    private double hargaJualApotek;
+    private double hargaPlot;
+    private double hargaBeliPpn;
+    private int quantity;
 }

@@ -2,377 +2,462 @@
 <html xmlns:th="http://www.thymeleaf.org" layout:decorate="~{layout}">
   <body>
     <div layout:fragment="content">
-      <div class="card">
-        <h3
-          style="
-            margin-bottom: 0.5rem;
-            color: var(--primary);
-            display: flex;
-            align-items: center;
-            gap: 12px;
-          "
-        >
-          <i class="fa-solid fa-square-poll-vertical"></i> Log Sistem & Data
-          Intelijen
-        </h3>
-        <p
-          style="
-            color: var(--text-muted);
-            margin-bottom: 3rem;
-            font-size: 1.1rem;
-          "
-        >
-          Repositori data historis lengkap untuk pergerakan rantai pasok dan
-          interaksi klinis pasien.
-        </p>
-
-        <!-- FINANCIAL SUMMARY SECTION -->
-        <div
-          class="card"
-          style="
-            margin-bottom: 2rem;
-            border: 1px solid #e2e8f0;
-            background: #f8fafc;
-          "
-        >
-          <h3
-            style="
-              margin-bottom: 2rem;
-              color: var(--primary);
-              font-size: 1.25rem;
-            "
-          >
-            <i class="fa-solid fa-money-bill-trend-up"></i> Ringkasan Keuangan &
-            Operasional
-          </h3>
-
-          <div
-            style="
-              display: grid;
-              grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-              gap: 1.5rem;
-              margin-bottom: 2rem;
-            "
-          >
-            <div
-              style="
-                background: rgba(var(--primary-rgb), 0.1);
-                padding: 1.5rem;
-                border-radius: 12px;
-                border-left: 4px solid var(--primary);
-              "
-            >
-              <span
-                style="
-                  display: block;
-                  font-size: 0.8rem;
-                  color: var(--text-muted);
-                  text-transform: uppercase;
-                  font-weight: 600;
-                "
-                >Total Pendapatan</span
-              >
-              <span
-                style="
-                  display: block;
-                  font-size: 1.5rem;
-                  font-weight: 700;
-                  color: var(--primary);
-                "
-                th:text="'Rp ' + ${#numbers.formatDecimal(totalRevenue, 0, 'COMMA', 0, 'POINT')}"
-                >Rp 0</span
-              >
-            </div>
-            <div
-              style="
-                background: rgba(22, 163, 74, 0.1);
-                padding: 1.5rem;
-                border-radius: 12px;
-                border-left: 4px solid #16a34a;
-              "
-            >
-              <span
-                style="
-                  display: block;
-                  font-size: 0.8rem;
-                  color: var(--text-muted);
-                  text-transform: uppercase;
-                  font-weight: 600;
-                "
-                >Estimasi Margin (30%)</span
-              >
-              <span
-                style="
-                  display: block;
-                  font-size: 1.5rem;
-                  font-weight: 700;
-                  color: #16a34a;
-                "
-                th:text="'Rp ' + ${#numbers.formatDecimal(totalRevenue * 0.3, 0, 'COMMA', 0, 'POINT')}"
-                >Rp 0</span
-              >
-            </div>
-            <div
-              style="
-                background: rgba(147, 51, 234, 0.1);
-                padding: 1.5rem;
-                border-radius: 12px;
-                border-left: 4px solid #9333ea;
-              "
-            >
-              <span
-                style="
-                  display: block;
-                  font-size: 0.8rem;
-                  color: var(--text-muted);
-                  text-transform: uppercase;
-                  font-weight: 600;
-                "
-                >Varian Item Aktif</span
-              >
-              <span
-                style="
-                  display: block;
-                  font-size: 1.5rem;
-                  font-weight: 700;
-                  color: #9333ea;
-                "
-                th:text="${totalItems}"
-                >0</span
-              >
-            </div>
+<div class="stat-grid">
+        <div class="card stat-card">
+          <div class="stat-icon" style="color: var(--primary)">
+            <i class="fa-solid fa-money-bill-trend-up"></i>
           </div>
-
-          <div style="display: flex; gap: 1rem; flex-wrap: wrap">
-            <a
-              th:href="@{/reports/export/pdf}"
-              class="btn btn-primary"
-              style="
-                padding: 12px 24px;
-                border-radius: 10px;
-                text-decoration: none;
-                display: inline-flex;
-                align-items: center;
-                gap: 8px;
-              "
+          <div class="stat-info">
+            <h4>Estimasi Revenue</h4>
+            <div
+              class="value"
+              th:text="${'Rp ' + #numbers.formatDecimal(totalRevenue, 0, 'COMMA', 0, 'POINT')}"
             >
-              <i class="fa-solid fa-file-pdf"></i> Cetak Laporan Keuangan (PDF)
-            </a>
-            <button
-              class="btn"
-              style="
-                background: var(--secondary);
-                color: white;
-                padding: 12px 24px;
-                border-radius: 10px;
-                border: none;
-                cursor: pointer;
-                display: inline-flex;
-                align-items: center;
-                gap: 8px;
-              "
-              onclick="window.print()"
-            >
-              <i class="fa-solid fa-print"></i> Print Halaman
-            </button>
+              Rp 0
+            </div>
           </div>
         </div>
-
-        <!-- SECTION 1: LOG INVENTORI -->
-        <div
-          class="card"
-          style="
-            background: rgba(255, 255, 255, 0.4);
-            box-shadow: none;
-            border-color: #e2e8f0;
-          "
-        >
-          <div
-            style="
-              display: flex;
-              justify-content: space-between;
-              align-items: center;
-              margin-bottom: 1.5rem;
-              flex-wrap: wrap;
-              gap: 10px;
-            "
-          >
-            <h4
-              style="
-                margin-bottom: 0;
-                color: #1e3a8a;
-                display: flex;
-                align-items: center;
-                gap: 10px;
-              "
-            >
-              <i class="fa-solid fa-truck-moving"></i> Pergerakan Rantai Pasok
-              (Masuk/Keluar)
-            </h4>
-            <span
-              style="
-                font-size: 0.8rem;
-                background: #dbeafe;
-                color: #1e40af;
-                padding: 4px 12px;
-                border-radius: 20px;
-                font-weight: 700;
-              "
-              >LOG REAL-TIME</span
-            >
+        <div class="card stat-card">
+          <div class="stat-icon" style="color: var(--success)">
+            <i class="fa-solid fa-chart-line"></i>
           </div>
-
-          <div class="table-container">
-            <table>
-              <thead style="background: #f8fafc">
-                <tr>
-                  <th>Waktu</th>
-                  <th>Nama Obat</th>
-                  <th>ID Batch</th>
-                  <th>Tipe Pergerakan</th>
-                  <th>Jumlah Perubahan</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr th:each="r : ${riwayatBarang}">
-                  <td
-                    style="font-family: monospace; font-size: 0.85rem"
-                    th:text="${#temporals.format(r.timestamp, 'yyyy-MM-dd HH:mm')}"
-                  ></td>
-                  <td style="font-weight: 600" th:text="${r.namaObat}"></td>
-                  <td
-                    style="font-family: monospace; color: var(--text-muted)"
-                    th:text="${r.nomorBatch}"
-                  ></td>
-                  <td>
-                    <span
-                      th:if="${r.tipe == 'MASUK'}"
-                      style="
-                        background: #dcfce7;
-                        color: #166534;
-                        padding: 4px 10px;
-                        border-radius: 20px;
-                        font-size: 0.75rem;
-                        font-weight: 700;
-                      "
-                    >
-                      <i class="fa-solid fa-arrow-down-long"></i> STOK MASUK
-                    </span>
-                    <span
-                      th:if="${r.tipe == 'KELUAR'}"
-                      style="
-                        background: #fee2e2;
-                        color: #991b1b;
-                        padding: 4px 10px;
-                        border-radius: 20px;
-                        font-size: 0.75rem;
-                        font-weight: 700;
-                      "
-                    >
-                      <i class="fa-solid fa-arrow-up-long"></i> STOK KELUAR
-                    </span>
-                  </td>
-                  <td
-                    style="font-weight: 800; font-size: 1.1rem"
-                    th:text="${r.quantity}"
-                  ></td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-          <div
-            th:if="${riwayatBarang.empty}"
-            style="text-align: center; padding: 2rem; color: var(--text-muted)"
-          >
-            Belum ada pergerakan stok.
+          <div class="stat-info">
+            <h4>Margin Total</h4>
+            <div
+              class="value"
+              th:text="${'Rp ' + #numbers.formatDecimal(totalMargin, 0, 'COMMA', 0, 'POINT')}"
+            >
+              Rp 0
+            </div>
           </div>
         </div>
-
-        <!-- SECTION 2: LOG KLINIS -->
-        <div
-          class="card"
-          style="
-            background: rgba(255, 255, 255, 0.4);
-            box-shadow: none;
-            border-color: #e2e8f0;
-            margin-top: 3rem;
-          "
-        >
-          <div
-            style="
-              display: flex;
-              justify-content: space-between;
-              align-items: center;
-              margin-bottom: 1.5rem;
-              flex-wrap: wrap;
-              gap: 10px;
-            "
-          >
-            <h4
-              style="
-                margin-bottom: 0;
-                color: #0f766e;
-                display: flex;
-                align-items: center;
-                gap: 10px;
-              "
-            >
-              <i class="fa-solid fa-stethoscope"></i> Riwayat Pelayanan &
-              Penyerahan Obat
-            </h4>
-            <span
-              style="
-                font-size: 0.8rem;
-                background: #ccfbf1;
-                color: #0f766e;
-                padding: 4px 12px;
-                border-radius: 20px;
-                font-weight: 700;
-              "
-              >REKAM MEDIS</span
-            >
+        <div class="card stat-card">
+          <div class="stat-icon" style="color: var(--secondary)">
+            <i class="fa-solid fa-boxes-stacked"></i>
           </div>
-
-          <div class="table-container">
-            <table>
-              <thead style="background: #f0fdfa">
-                <tr>
-                  <th>Tgl Kunjungan</th>
-                  <th>ID Pasien (NIK)</th>
-                  <th>Nama Pasien</th>
-                  <th>Diagnosis</th>
-                  <th>Terapi Diberikan</th>
-                  <th>Dosis / Aturan</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr th:each="k : ${riwayatKlinis}">
-                  <td th:text="${k.tglKunjungan}"></td>
-                  <td style="font-family: monospace" th:text="${k.nik}"></td>
-                  <td style="font-weight: 600" th:text="${k.namaPasien}"></td>
-                  <td th:text="${k.diagnosa}"></td>
-                  <td
-                    style="
-                      color: var(--primary);
-                      font-weight: 700;
-                      background: #eff6ff;
-                      padding: 10px;
-                    "
-                    th:text="${k.namaObat}"
-                  ></td>
-                  <td style="font-style: italic" th:text="${k.dosis}"></td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-          <div
-            th:if="${riwayatKlinis.empty}"
-            style="text-align: center; padding: 2rem; color: var(--text-muted)"
-          >
-            Belum ada riwayat pelayanan.
+          <div class="stat-info">
+            <h4>Item Aktif</h4>
+            <div class="value" th:text="${activeItems}">0</div>
           </div>
         </div>
       </div>
+<div class="card">
+        <h3 style="margin-bottom: 1.5rem; color: var(--primary)">
+          <i class="fa-solid fa-chart-column"></i> Laporan Omset
+        </h3>
+
+        <div
+          style="
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+          "
+          class="omset-grid"
+        >
+<div
+            class="card"
+            style="background: #eff6ff; border: 1px solid #bfdbfe"
+          >
+            <h4 style="color: #1e40af; font-size: 0.9rem; margin-bottom: 1rem">
+              <i class="fa-solid fa-calendar-day"></i> Omset Harian
+            </h4>
+            <form th:action="@{/reports}" method="get">
+              <div class="form-group">
+                <label>Pilih Tanggal:</label>
+                <input
+                  type="date"
+                  name="tanggalHarian"
+                  th:value="${tanggalHarian}"
+                  required
+                />
+              </div>
+              <button type="submit" class="btn btn-primary" style="width: 100%">
+                Lihat
+              </button>
+            </form>
+            <div
+              th:if="${omsetHarian != null}"
+              style="margin-top: 1rem; text-align: center"
+            >
+              <div
+                style="font-size: 0.8rem; color: #1e40af; letter-spacing: 1px"
+              >
+                TOTAL OMSET
+              </div>
+              <div
+                style="font-size: 2rem; font-weight: 900; color: #1e40af"
+                th:text="${'Rp ' + #numbers.formatDecimal(omsetHarian, 0, 'COMMA', 0, 'POINT')}"
+              >
+                Rp 0
+              </div>
+            </div>
+          </div>
+<div
+            class="card"
+            style="background: #f0fdf4; border: 1px solid #bbf7d0"
+          >
+            <h4 style="color: #166534; font-size: 0.9rem; margin-bottom: 1rem">
+              <i class="fa-solid fa-calendar-week"></i> Omset Bulanan
+            </h4>
+            <form th:action="@{/reports}" method="get">
+              <div class="form-grid" style="grid-template-columns: 1fr 1fr">
+                <div class="form-group">
+                  <label>Bulan:</label>
+                  <select name="bulan" required>
+                    <option value="">--</option>
+                    <option
+                      value="1"
+                      th:selected="${bulan != null && bulan == 1}"
+                    >
+                      Januari
+                    </option>
+                    <option
+                      value="2"
+                      th:selected="${bulan != null && bulan == 2}"
+                    >
+                      Februari
+                    </option>
+                    <option
+                      value="3"
+                      th:selected="${bulan != null && bulan == 3}"
+                    >
+                      Maret
+                    </option>
+                    <option
+                      value="4"
+                      th:selected="${bulan != null && bulan == 4}"
+                    >
+                      April
+                    </option>
+                    <option
+                      value="5"
+                      th:selected="${bulan != null && bulan == 5}"
+                    >
+                      Mei
+                    </option>
+                    <option
+                      value="6"
+                      th:selected="${bulan != null && bulan == 6}"
+                    >
+                      Juni
+                    </option>
+                    <option
+                      value="7"
+                      th:selected="${bulan != null && bulan == 7}"
+                    >
+                      Juli
+                    </option>
+                    <option
+                      value="8"
+                      th:selected="${bulan != null && bulan == 8}"
+                    >
+                      Agustus
+                    </option>
+                    <option
+                      value="9"
+                      th:selected="${bulan != null && bulan == 9}"
+                    >
+                      September
+                    </option>
+                    <option
+                      value="10"
+                      th:selected="${bulan != null && bulan == 10}"
+                    >
+                      Oktober
+                    </option>
+                    <option
+                      value="11"
+                      th:selected="${bulan != null && bulan == 11}"
+                    >
+                      November
+                    </option>
+                    <option
+                      value="12"
+                      th:selected="${bulan != null && bulan == 12}"
+                    >
+                      Desember
+                    </option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label>Tahun:</label>
+                  <input
+                    type="number"
+                    name="tahunBulanan"
+                    th:value="${tahunBulanan}"
+                    placeholder="2026"
+                    required
+                  />
+                </div>
+              </div>
+              <button type="submit" class="btn btn-success" style="width: 100%">
+                Lihat
+              </button>
+            </form>
+            <div
+              th:if="${omsetBulanan != null}"
+              style="margin-top: 1rem; text-align: center"
+            >
+              <div
+                style="font-size: 0.8rem; color: #166534; letter-spacing: 1px"
+              >
+                TOTAL OMSET
+              </div>
+              <div
+                style="font-size: 2rem; font-weight: 900; color: #166534"
+                th:text="${'Rp ' + #numbers.formatDecimal(omsetBulanan, 0, 'COMMA', 0, 'POINT')}"
+              >
+                Rp 0
+              </div>
+            </div>
+          </div>
+<div
+            class="card"
+            style="background: #fefce8; border: 1px solid #fde68a"
+          >
+            <h4 style="color: #92400e; font-size: 0.9rem; margin-bottom: 1rem">
+              <i class="fa-solid fa-calendar"></i> Omset Tahunan
+            </h4>
+            <form th:action="@{/reports}" method="get">
+              <div class="form-group">
+                <label>Tahun:</label>
+                <input
+                  type="number"
+                  name="tahunTahunan"
+                  th:value="${tahunTahunan}"
+                  placeholder="2026"
+                  required
+                />
+              </div>
+              <button type="submit" class="btn btn-warning" style="width: 100%">
+                Lihat
+              </button>
+            </form>
+            <div
+              th:if="${omsetTahunan != null}"
+              style="margin-top: 1rem; text-align: center"
+            >
+              <div
+                style="font-size: 0.8rem; color: #92400e; letter-spacing: 1px"
+              >
+                TOTAL OMSET
+              </div>
+              <div
+                style="font-size: 2rem; font-weight: 900; color: #92400e"
+                th:text="${'Rp ' + #numbers.formatDecimal(omsetTahunan, 0, 'COMMA', 0, 'POINT')}"
+              >
+                Rp 0
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+<div class="card">
+        <h3 style="margin-bottom: 1.5rem; color: var(--success)">
+          <i class="fa-solid fa-file-excel"></i> Export Excel
+        </h3>
+        <div
+          class="omset-grid"
+          style="
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+          "
+        >
+<div
+            class="card"
+            style="background: #f0fdf4; border: 1px solid #bbf7d0"
+          >
+            <h4 style="color: #166534; font-size: 0.9rem; margin-bottom: 1rem">
+              <i class="fa-solid fa-download"></i> Export Omset
+            </h4>
+            <form
+              th:action="@{/reports/export/omset}"
+              method="get"
+              target="_blank"
+            >
+              <div class="form-grid" style="grid-template-columns: 1fr 1fr">
+                <div class="form-group">
+                  <label>Dari Tanggal:</label>
+                  <input type="date" name="startDate" required />
+                </div>
+                <div class="form-group">
+                  <label>Sampai Tanggal:</label>
+                  <input type="date" name="endDate" required />
+                </div>
+              </div>
+              <button type="submit" class="btn btn-success" style="width: 100%">
+                <i class="fa-solid fa-file-excel"></i> Download Omset Excel
+              </button>
+            </form>
+          </div>
+<div
+            class="card"
+            style="background: #eff6ff; border: 1px solid #bfdbfe"
+          >
+            <h4 style="color: #1e40af; font-size: 0.9rem; margin-bottom: 1rem">
+              <i class="fa-solid fa-truck"></i> Export Laporan PBF
+            </h4>
+            <p
+              style="
+                color: var(--text-muted);
+                font-size: 0.9rem;
+                margin-bottom: 1rem;
+              "
+            >
+              Export data input obat dari semua Pedagang Besar Farmasi (PBF).
+            </p>
+            <a
+              th:href="@{/reports/export/pbf}"
+              class="btn btn-primary"
+              style="
+                width: 100%;
+                display: block;
+                text-align: center;
+                text-decoration: none;
+              "
+              target="_blank"
+            >
+              <i class="fa-solid fa-file-excel"></i> Download Laporan PBF Excel
+            </a>
+          </div>
+        </div>
+      </div>
+<div class="card">
+        <h3 style="margin-bottom: 1.5rem">
+          <i class="fa-solid fa-boxes-stacked"></i> Riwayat Pergerakan Barang
+        </h3>
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Waktu</th>
+                <th>Obat</th>
+                <th>Batch</th>
+                <th>Tipe</th>
+                <th>Qty</th>
+                <th>PBF</th>
+                <th>Harga Beli</th>
+                <th>Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr th:each="r : ${riwayatBarang}">
+                <td th:text="${r.timestamp}">-</td>
+                <td th:text="${r.namaObat}">-</td>
+                <td th:text="${r.nomorBatch}">-</td>
+                <td>
+                  <span
+                    th:text="${r.tipe}"
+                    th:style="${r.tipe == 'MASUK' ? 'color: var(--success); font-weight: 700' : 'color: var(--accent); font-weight: 700'}"
+                  >
+                  </span>
+                </td>
+                <td th:text="${r.quantity}">0</td>
+                <td th:text="${r.namaPBF ?: '-'}">-</td>
+                <td
+                  th:text="${r.hargaBeli != null ? 'Rp ' + #numbers.formatDecimal(r.hargaBeli, 0, 'COMMA', 0, 'POINT') : '-'}"
+                >
+                  -
+                </td>
+                <td
+                  th:text="${r.totalHarga != null ? 'Rp ' + #numbers.formatDecimal(r.totalHarga, 0, 'COMMA', 0, 'POINT') : '-'}"
+                >
+                  -
+                </td>
+              </tr>
+              <tr th:if="${riwayatBarang.isEmpty()}">
+                <td
+                  colspan="8"
+                  style="
+                    text-align: center;
+                    color: var(--text-muted);
+                    padding: 2rem;
+                  "
+                >
+                  Belum ada data pergerakan barang
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+<div class="card">
+        <h3 style="margin-bottom: 1.5rem">
+          <i class="fa-solid fa-stethoscope"></i> Riwayat Klinis
+        </h3>
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Tanggal</th>
+                <th>Pasien</th>
+                <th>Dokter</th>
+                <th>RS/Klinik</th>
+                <th>Diagnosa</th>
+                <th>Obat</th>
+                <th>Qty</th>
+                <th>Harga</th>
+                <th>Tuslah</th>
+                <th>Embalase</th>
+                <th>Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr th:each="r : ${riwayatKlinis}">
+                <td th:text="${r.tglKunjungan}">-</td>
+                <td th:text="${r.namaPasien}">-</td>
+                <td th:text="${r.namaDokter ?: '-'}">-</td>
+                <td th:text="${r.namaRumahSakit ?: '-'}">-</td>
+                <td th:text="${r.diagnosa}">-</td>
+                <td th:text="${r.namaObat}">-</td>
+                <td th:text="${r.jumlahObat ?: 1}">-</td>
+                <td
+                  th:text="${r.hargaObat != null ? 'Rp ' + #numbers.formatDecimal(r.hargaObat, 0, 'COMMA', 0, 'POINT') : '-'}"
+                >
+                  -
+                </td>
+                <td
+                  th:text="${r.tuslah != null ? 'Rp ' + #numbers.formatDecimal(r.tuslah, 0, 'COMMA', 0, 'POINT') : '-'}"
+                >
+                  -
+                </td>
+                <td
+                  th:text="${r.embalase != null ? 'Rp ' + #numbers.formatDecimal(r.embalase, 0, 'COMMA', 0, 'POINT') : '-'}"
+                >
+                  -
+                </td>
+                <td
+                  style="font-weight: 700"
+                  th:text="${r.totalHarga != null ? 'Rp ' + #numbers.formatDecimal(r.totalHarga, 0, 'COMMA', 0, 'POINT') : '-'}"
+                >
+                  -
+                </td>
+              </tr>
+              <tr th:if="${riwayatKlinis.isEmpty()}">
+                <td
+                  colspan="11"
+                  style="
+                    text-align: center;
+                    color: var(--text-muted);
+                    padding: 2rem;
+                  "
+                >
+                  Belum ada data riwayat klinis
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <style>
+        @media (max-width: 768px) {
+          .omset-grid {
+            grid-template-columns: 1fr !important;
+          }
+        }
+      </style>
     </div>
   </body>
 </html>

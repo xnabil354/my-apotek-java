@@ -6,115 +6,523 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title th:text="${pageTitle} + ' - My Apotek'">
-      My Apotek Professional
-    </title>
-
-    <!-- Google Fonts: Inter -->
+    <title>My Apotek Professional</title>
     <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap"
       rel="stylesheet"
     />
-    <!-- FontAwesome for Icons -->
     <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
       rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
     />
-    <!-- Custom CSS -->
-    <link rel="stylesheet" th:href="@{/css/style.css}" />
+    <style>
+      :root {
+        --primary: #2563eb;
+        --primary-dark: #1d4ed8;
+        --secondary: #6366f1;
+        --success: #10b981;
+        --warning: #f59e0b;
+        --accent: #ef4444;
+        --bg: #f1f5f9;
+        --bg-card: #ffffff;
+        --text-dark: #0f172a;
+        --text-muted: #64748b;
+        --glass-border: #e2e8f0;
+        --sidebar-width: 260px;
+      }
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        font-family: "Inter", sans-serif;
+        background: var(--bg);
+        color: var(--text-dark);
+        display: flex;
+        min-height: 100vh;
+      }
+      .sidebar {
+        width: var(--sidebar-width);
+        background: linear-gradient(180deg, #0f172a 0%, #1e293b 100%);
+        color: white;
+        padding: 2rem 1.2rem;
+        display: flex;
+        flex-direction: column;
+        position: fixed;
+        top: 0;
+        left: 0;
+        height: 100vh;
+        overflow-y: auto;
+        z-index: 100;
+        transition: transform 0.3s ease;
+      }
+      .sidebar-brand {
+        font-size: 1.3rem;
+        font-weight: 900;
+        margin-bottom: 0.5rem;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .sidebar-brand i {
+        font-size: 1.5rem;
+        color: var(--primary);
+      }
+      .sidebar-sub {
+        font-size: 0.75rem;
+        color: rgba(255, 255, 255, 0.4);
+        margin-bottom: 2.5rem;
+        letter-spacing: 1px;
+      }
+      .nav-link {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 14px 16px;
+        border-radius: 12px;
+        color: rgba(255, 255, 255, 0.65);
+        text-decoration: none;
+        font-weight: 500;
+        font-size: 0.92rem;
+        transition: all 0.2s;
+        margin-bottom: 4px;
+      }
+      .nav-link:hover,
+      .nav-link.active {
+        background: rgba(255, 255, 255, 0.1);
+        color: white;
+      }
+      .nav-link i {
+        width: 20px;
+        text-align: center;
+      }
+      .nav-section {
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        letter-spacing: 1.5px;
+        color: rgba(255, 255, 255, 0.3);
+        margin: 1.5rem 0 0.7rem 16px;
+        font-weight: 700;
+      }
+      .main-content {
+        flex: 1;
+        margin-left: var(--sidebar-width);
+        padding: 2rem 2.5rem;
+      }
+      .card {
+        background: var(--bg-card);
+        border-radius: 16px;
+        padding: 2rem;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+        margin-bottom: 1.5rem;
+      }
+      .stat-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 1.5rem;
+      }
+      .stat-card {
+        display: flex;
+        align-items: center;
+        gap: 1.2rem;
+      }
+      .stat-icon {
+        font-size: 2rem;
+      }
+      .stat-info h4 {
+        color: var(--text-muted);
+        font-size: 0.85rem;
+        font-weight: 500;
+      }
+      .stat-info .value {
+        font-size: 2rem;
+        font-weight: 900;
+      }
+      .form-group {
+        margin-bottom: 1.2rem;
+      }
+      .form-group label {
+        display: block;
+        font-weight: 600;
+        margin-bottom: 0.4rem;
+        color: var(--text-dark);
+        font-size: 0.88rem;
+      }
+      input,
+      select,
+      textarea {
+        width: 100%;
+        padding: 12px 16px;
+        border: 2px solid var(--glass-border);
+        border-radius: 10px;
+        font-size: 0.95rem;
+        font-family: "Inter", sans-serif;
+        transition: border-color 0.2s;
+        background: white;
+      }
+      input:focus,
+      select:focus,
+      textarea:focus {
+        outline: none;
+        border-color: var(--primary);
+      }
+      .btn {
+        padding: 12px 24px;
+        border: none;
+        border-radius: 10px;
+        font-weight: 700;
+        font-size: 0.95rem;
+        cursor: pointer;
+        transition: all 0.2s;
+        font-family: "Inter", sans-serif;
+      }
+      .btn-primary {
+        background: var(--primary);
+        color: white;
+      }
+      .btn-primary:hover {
+        background: var(--primary-dark);
+        transform: translateY(-1px);
+      }
+      .btn-success {
+        background: var(--success);
+        color: white;
+      }
+      .btn-success:hover {
+        opacity: 0.9;
+      }
+      .btn-warning {
+        background: var(--warning);
+        color: white;
+      }
+      .btn-secondary {
+        background: var(--secondary);
+        color: white;
+      }
+      .btn-accent {
+        background: var(--accent);
+        color: white;
+      }
+      .table-container {
+        overflow-x: auto;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+      th,
+      td {
+        padding: 12px 16px;
+        text-align: left;
+        border-bottom: 1px solid var(--glass-border);
+        font-size: 0.9rem;
+      }
+      th {
+        background: #f8fafc;
+        font-weight: 700;
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: var(--text-muted);
+      }
+      .alert {
+        padding: 1rem 1.5rem;
+        border-radius: 12px;
+        margin-bottom: 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-weight: 500;
+      }
+      .alert-success {
+        background: #ecfdf5;
+        color: #065f46;
+        border: 1px solid #a7f3d0;
+      }
+      .alert-danger {
+        background: #fef2f2;
+        color: #991b1b;
+        border: 1px solid #fecaca;
+      }
+      .alert-warning {
+        background: #fffbeb;
+        color: #92400e;
+        border: 1px solid #fde68a;
+      }
+      .form-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1rem;
+      }
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(10px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      .hamburger {
+        display: none;
+        position: fixed;
+        top: 1rem;
+        left: 1rem;
+        z-index: 200;
+        background: var(--primary);
+        color: white;
+        border: none;
+        border-radius: 10px;
+        padding: 10px 14px;
+        font-size: 1.2rem;
+        cursor: pointer;
+      }
+      @media (max-width: 1024px) {
+        :root {
+          --sidebar-width: 220px;
+        }
+        .main-content {
+          padding: 1.5rem;
+        }
+        .stat-grid {
+          grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+          gap: 1rem;
+        }
+        .card {
+          padding: 1.5rem;
+        }
+        th,
+        td {
+          padding: 10px 12px;
+          font-size: 0.82rem;
+        }
+      }
+      @media (max-width: 768px) {
+        .sidebar {
+          transform: translateX(-100%);
+          width: 280px;
+          box-shadow: 4px 0 25px rgba(0, 0, 0, 0.3);
+        }
+        .sidebar.open {
+          transform: translateX(0);
+        }
+        .sidebar-backdrop {
+          display: none;
+          position: fixed;
+          inset: 0;
+          background: rgba(0, 0, 0, 0.5);
+          z-index: 99;
+        }
+        .sidebar-backdrop.show {
+          display: block;
+        }
+        .main-content {
+          margin-left: 0;
+          padding: 1rem;
+          padding-top: 4.5rem;
+          width: 100%;
+          min-width: 0;
+        }
+        .hamburger {
+          display: block;
+        }
+        .form-grid {
+          grid-template-columns: 1fr;
+          gap: 0.8rem;
+        }
+        .stat-grid {
+          grid-template-columns: 1fr 1fr;
+          gap: 0.8rem;
+        }
+        .card {
+          padding: 1.2rem;
+          border-radius: 12px;
+          margin-bottom: 1rem;
+        }
+        .btn {
+          padding: 10px 18px;
+          font-size: 0.88rem;
+          width: 100%;
+          margin-bottom: 0.5rem;
+        }
+        .btn-group-mobile {
+          display: flex;
+          flex-direction: column;
+          gap: 0.5rem;
+        }
+        table {
+          font-size: 0.78rem;
+        }
+        th,
+        td {
+          padding: 8px 10px;
+          white-space: nowrap;
+        }
+        .table-container {
+          overflow-x: auto;
+          -webkit-overflow-scrolling: touch;
+          margin: 0 -1.2rem;
+          padding: 0 1.2rem;
+        }
+        .stat-info .value {
+          font-size: 1.5rem;
+        }
+        .stat-info h4 {
+          font-size: 0.75rem;
+        }
+        .stat-icon {
+          font-size: 1.5rem;
+        }
+        .stat-card {
+          gap: 0.8rem;
+        }
+        h2 {
+          font-size: 1.3rem;
+        }
+        .form-group label {
+          font-size: 0.82rem;
+        }
+        input,
+        select,
+        textarea {
+          padding: 10px 14px;
+          font-size: 0.9rem;
+        }
+        .alert {
+          padding: 0.8rem 1rem;
+          font-size: 0.85rem;
+          flex-wrap: wrap;
+        }
+        .omset-grid {
+          grid-template-columns: 1fr !important;
+          gap: 1rem !important;
+        }
+        .item-row {
+          flex-direction: column !important;
+          gap: 0.5rem !important;
+        }
+        .item-row .form-group {
+          min-width: 100% !important;
+          flex: auto !important;
+        }
+        h3 {
+          font-size: 1.1rem;
+        }
+        #grandTotal {
+          font-size: 1.8rem !important;
+        }
+        .export-btn-group {
+          flex-direction: column;
+          gap: 0.5rem;
+        }
+        .export-btn-group .btn {
+          width: 100%;
+        }
+      }
+      @media (max-width: 480px) {
+        .stat-grid {
+          grid-template-columns: 1fr;
+        }
+        .main-content {
+          padding: 0.8rem;
+          padding-top: 4.5rem;
+        }
+        .card {
+          padding: 1rem;
+        }
+        .sidebar-brand {
+          font-size: 1.1rem;
+        }
+        h2 {
+          font-size: 1.15rem;
+        }
+        h3 {
+          font-size: 1rem;
+        }
+        .btn {
+          font-size: 0.82rem;
+          padding: 10px 14px;
+        }
+        th {
+          font-size: 0.7rem;
+        }
+        td {
+          font-size: 0.75rem;
+        }
+        p {
+          font-size: 0.85rem;
+        }
+        #grandTotal {
+          font-size: 1.5rem !important;
+        }
+      }
+    </style>
   </head>
   <body>
-    <!-- Sidebar -->
-    <nav class="sidebar" id="sidebar">
-      <div class="brand">
-        <i class="fa-solid fa-hospital-user"></i> <span>MY APOTEK</span>
-      </div>
+    <button class="hamburger" id="hamburgerBtn">
+      <i class="fa-solid fa-bars"></i>
+    </button>
+    <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
 
-      <a
-        th:href="@{/}"
-        class="nav-link"
-        th:classappend="${pageTitle == 'Beranda'} ? 'active'"
-      >
-        <i class="fa-solid fa-chart-line"></i> <span>Beranda</span>
+    <nav class="sidebar" id="sidebar">
+      <div class="sidebar-brand">
+        <i class="fa-solid fa-capsules"></i> My Apotek
+      </div>
+      <div class="sidebar-sub">PHARMACY MANAGEMENT SYSTEM</div>
+
+      <div class="nav-section">Menu Utama</div>
+      <a th:href="@{/}" class="nav-link">
+        <i class="fa-solid fa-chart-pie"></i> Dashboard
       </a>
-      <a
-        th:href="@{/inventory}"
-        class="nav-link"
-        th:classappend="${pageTitle == 'Manajemen Stok'} ? 'active'"
-      >
-        <i class="fa-solid fa-boxes-stacked"></i> <span>Stok Obat</span>
+      <a th:href="@{/inventory}" class="nav-link">
+        <i class="fa-solid fa-boxes-stacked"></i> Inventory Obat
       </a>
-      <a
-        th:href="@{/prescription}"
-        class="nav-link"
-        th:classappend="${pageTitle == 'Layanan Pasien'} ? 'active'"
-      >
-        <i class="fa-solid fa-user-doctor"></i> <span>Resep (CDSS)</span>
+      <a th:href="@{/prescription}" class="nav-link">
+        <i class="fa-solid fa-prescription"></i> Input Resep
       </a>
-      <a
-        th:href="@{/audit}"
-        class="nav-link"
-        th:classappend="${pageTitle == 'Audit Stok Opname'} ? 'active'"
-      >
-        <i class="fa-solid fa-scale-balanced"></i> <span>Audit (Opname)</span>
+      <a th:href="@{/penjualan}" class="nav-link">
+        <i class="fa-solid fa-cart-shopping"></i> Penjualan Langsung
       </a>
-      <a
-        th:href="@{/reports}"
-        class="nav-link"
-        th:classappend="${pageTitle == 'Laporan Sistem'} ? 'active'"
-      >
-        <i class="fa-solid fa-file-invoice"></i> <span>Laporan</span>
+
+      <div class="nav-section">Kontrol &amp; Audit</div>
+      <a th:href="@{/audit}" class="nav-link">
+        <i class="fa-solid fa-scale-balanced"></i> Stok Opname
+      </a>
+      <a th:href="@{/mims}" class="nav-link">
+        <i class="fa-solid fa-book-medical"></i> MIMS Apotek
+      </a>
+
+      <div class="nav-section">Laporan</div>
+      <a th:href="@{/reports}" class="nav-link">
+        <i class="fa-solid fa-file-invoice-dollar"></i> Laporan &amp; Omset
       </a>
     </nav>
 
-    <!-- Main Content -->
-    <main class="main-content">
-      <header class="header">
-        <div style="display: flex; align-items: center; gap: 1rem">
-          <button class="mobile-toggle" onclick="toggleSidebar()">
-            <i class="fa-solid fa-bars"></i>
-          </button>
-          <h1 class="page-title" th:text="${pageTitle}">Ikhtisar</h1>
-        </div>
-        <div class="user-profile">
-          <span
-            style="
-              color: white;
-              background: var(--primary);
-              padding: 8px 16px;
-              border-radius: 30px;
-              font-size: 0.85rem;
-              font-weight: 600;
-              box-shadow: 0 4px 10px var(--primary-glow);
-            "
-          >
-            <i class="fa-solid fa-user-shield"></i> Mode Admin
-          </span>
-        </div>
-      </header>
-
-      <!-- Dynamic Content Injection -->
-      <div layout:fragment="content"></div>
+    <main class="main-content" layout:fragment="content">
+      <p>Content goes here</p>
     </main>
 
     <script>
+      const ham = document.getElementById("hamburgerBtn");
+      const sb = document.getElementById("sidebar");
+      const bd = document.getElementById("sidebarBackdrop");
       function toggleSidebar() {
-        document.getElementById("sidebar").classList.toggle("show");
+        sb.classList.toggle("open");
+        bd.classList.toggle("show");
       }
-
-      // Close sidebar when clicking outside on mobile
-      document.addEventListener("click", function (event) {
-        const sidebar = document.getElementById("sidebar");
-        const toggle = document.querySelector(".mobile-toggle");
-        if (
-          window.innerWidth <= 1024 &&
-          !sidebar.contains(event.target) &&
-          !toggle.contains(event.target) &&
-          sidebar.classList.contains("show")
-        ) {
-          sidebar.classList.remove("show");
-        }
-      });
+      ham.addEventListener("click", toggleSidebar);
+      bd.addEventListener("click", toggleSidebar);
+      document.querySelectorAll(".nav-link").forEach((l) =>
+        l.addEventListener("click", () => {
+          if (window.innerWidth <= 768) {
+            sb.classList.remove("open");
+            bd.classList.remove("show");
+          }
+        }),
+      );
     </script>
   </body>
 </html>

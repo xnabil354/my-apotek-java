@@ -1,15 +1,18 @@
 package com.example.My.Apotek.controller;
 
-import com.example.My.Apotek.model.Obat;
-import com.example.My.Apotek.model.RiwayatKlinis;
+import com.example.My.Apotek.model.*;
 import com.example.My.Apotek.service.ApotekService;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.io.IOException;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Controller
@@ -21,235 +24,259 @@ public class WebController {
     @GetMapping("/")
     public String dashboard(Model model) {
         List<Obat> allObat = apotekService.getAllObat();
-        List<RiwayatKlinis> allRiwayat = apotekService.getAllRiwayatKlinis();
-        LocalDate today = LocalDate.now();
+        model.addAttribute("totalObat", allObat.size());
 
-        int totalObat = allObat.stream().mapToInt(Obat::getQuantity).sum();
-        long transaksiHariIni = allRiwayat.stream()
-                .filter(r -> r.getTglKunjungan().isEqual(today))
+        List<RiwayatKlinis> allKlinis = apotekService.getAllRiwayatKlinis();
+        long todayTx = allKlinis.stream()
+                .filter(r -> r.getTglKunjungan() != null && r.getTglKunjungan().equals(LocalDate.now()))
                 .count();
-        long peringatanKritis = allObat.stream()
-                .filter(o -> o.getQuantity() <= 10)
+        model.addAttribute("transaksiHariIni", todayTx);
+
+        long critical = allObat.stream()
+                .filter(o -> o.getQuantity() != null && o.getQuantity() < 10)
                 .count();
+        model.addAttribute("peringatanKritis", critical);
 
-        model.addAttribute("totalObat", totalObat);
-        model.addAttribute("transaksiHariIni", transaksiHariIni);
-        model.addAttribute("peringatanKritis", peringatanKritis);
-        model.addAttribute("recentActivities",
-                allRiwayat.size() > 5 ? allRiwayat.subList(allRiwayat.size() - 5, allRiwayat.size()) : allRiwayat);
+        List<RiwayatKlinis> recent = allKlinis.stream()
+                .sorted((a, b) -> {
+                    if (a.getTglKunjungan() == null)
+                        return 1;
+                    if (b.getTglKunjungan() == null)
+                        return -1;
+                    return b.getTglKunjungan().compareTo(a.getTglKunjungan());
+                })
+                .limit(10)
+                .toList();
+        model.addAttribute("recentActivities", recent);
 
-        model.addAttribute("pageTitle", "Beranda");
         return "dashboard";
     }
 
-    // --- INVENTORY ---
     @GetMapping("/inventory")
     public String inventory(Model model) {
-        model.addAttribute("pageTitle", "Manajemen Stok");
         model.addAttribute("obatList", apotekService.getAllObat());
         model.addAttribute("newObat", new Obat());
         return "inventory";
     }
 
-    @PostMapping("/inventory/save")
-    public String saveObat(@ModelAttribute Obat obat, RedirectAttributes ra) {
-        apotekService.tambahStokBarang(obat);
-        ra.addFlashAttribute("message", "✅ Barang berhasil disimpan!");
+    @PostMapping("/inventory/add")
+    public String addObat(@ModelAttribute Obat obat, RedirectAttributes redirect) {
+        try {
+            apotekService.tambahStokBarang(obat);
+            redirect.addFlashAttribute("success", "Obat berhasil ditambahkan!");
+        } catch (Exception e) {
+            redirect.addFlashAttribute("error", "Gagal menambahkan obat: " + e.getMessage());
+        }
         return "redirect:/inventory";
     }
 
-    // --- PRESCRIPTION (ALUR 2) ---
     @GetMapping("/prescription")
     public String prescription(Model model) {
-        model.addAttribute("pageTitle", "Layanan Pasien");
-        model.addAttribute("resep", new RiwayatKlinis());
         model.addAttribute("obatList", apotekService.getAllObat());
+        model.addAttribute("resep", new RiwayatKlinis());
         return "prescription";
     }
 
     @PostMapping("/prescription/check")
-    public String checkPrescription(@ModelAttribute RiwayatKlinis resep,
-            @RequestParam String riwayatAlergi,
-            @RequestParam(required = false) Double gfr,
-            @RequestParam(required = false) String medikasiLain,
-            @RequestParam(required = false) boolean confirm,
+    public String checkPrescription(
+            @ModelAttribute("resep") RiwayatKlinis resep,
+            @RequestParam(value = "riwayatAlergi", required = false) String alergi,
+            @RequestParam(value = "gfr", required = false) Double gfr,
+            @RequestParam(value = "medikasiLain", required = false) String medikasiLain,
             Model model) {
 
-        // 1. Run CDSS Rules
-        List<String> warnings = apotekService.validsaiResep(resep, riwayatAlergi, gfr, medikasiLain);
-
-        // 2. If not confirmed yet, just show results
-        if (!confirm) {
+        try {
+            List<String> warnings = apotekService.validsaiResep(resep, alergi, gfr, medikasiLain);
             model.addAttribute("warnings", warnings);
-            if (warnings.isEmpty()) {
-                model.addAttribute("message", "✅ Klinis Aman: Tidak ditemukan interaksi atau kontraindikasi.");
-                model.addAttribute("status", "success");
-            } else {
-                model.addAttribute("status", "danger");
-            }
-            model.addAttribute("showConfirm", true);
             model.addAttribute("resep", resep);
-            model.addAttribute("riwayatAlergi", riwayatAlergi);
+            model.addAttribute("riwayatAlergi", alergi);
             model.addAttribute("gfr", gfr);
             model.addAttribute("medikasiLain", medikasiLain);
             model.addAttribute("obatList", apotekService.getAllObat());
-            model.addAttribute("pageTitle", "Layanan Pasien");
-            return "prescription";
-        }
-
-        // 3. Process Dispense (If confirmed)
-        boolean success = apotekService.processDispense(resep);
-        if (success) {
-            model.addAttribute("message", "✅ Resep Berhasil Diproses & Stok Dikurangi.");
-            model.addAttribute("status", "success");
-            // Reset form
-            model.addAttribute("resep", new RiwayatKlinis());
-        } else {
-            model.addAttribute("warnings", List.of("❌ Gagal: Stok Obat Habis atau Tidak Ditemukan!"));
-            model.addAttribute("status", "danger");
+            model.addAttribute("checked", true);
+            if (resep.getNamaObat() != null && !resep.getNamaObat().isBlank()) {
+                apotekService.findObatByNama(resep.getNamaObat()).ifPresent(obat -> {
+                    if (resep.getHargaObat() == null && obat.getHargaJualApotek() != null) {
+                        resep.setHargaObat(obat.getHargaJualApotek());
+                    }
+                });
+            }
+        } catch (Exception e) {
+            model.addAttribute("error", "Gagal cek resep: " + e.getMessage());
+            model.addAttribute("obatList", apotekService.getAllObat());
             model.addAttribute("resep", resep);
         }
 
-        model.addAttribute("pageTitle", "Layanan Pasien");
-        model.addAttribute("obatList", apotekService.getAllObat());
         return "prescription";
     }
 
-    // --- AUDIT (STOK OPNAME) ---
+    @PostMapping("/prescription/confirm")
+    public String confirmPrescription(
+            @ModelAttribute("resep") RiwayatKlinis resep,
+            RedirectAttributes redirect) {
+
+        boolean success = apotekService.processDispense(resep);
+        if (success) {
+            redirect.addFlashAttribute("success", "Resep berhasil diproses dan obat telah diserahkan!");
+        } else {
+            redirect.addFlashAttribute("error", "Gagal memproses resep. Periksa ketersediaan stok!");
+        }
+        return "redirect:/prescription";
+    }
+
     @GetMapping("/audit")
     public String audit(Model model) {
-        model.addAttribute("pageTitle", "Audit Stok Opname");
+        model.addAttribute("opnameHistory", apotekService.getHistoryOpname());
         return "audit";
     }
 
     @PostMapping("/audit/check")
-    public String runAudit(@RequestParam String barcode,
-            @RequestParam(required = false) Integer fisik,
+    public String auditCheck(
+            @RequestParam("noFaktur") String noFaktur,
+            @RequestParam(value = "fisik", required = false) Integer fisik,
             Model model) {
 
-        Obat target = apotekService.findObatByBarcode(barcode).orElse(null);
-        if (target == null) {
-            model.addAttribute("error", "❌ Barcode tidak ditemukan di database!");
+        var item = apotekService.findObatByNoFaktur(noFaktur);
+        if (item.isEmpty()) {
+            model.addAttribute("error", "Obat dengan No Faktur '" + noFaktur + "' tidak ditemukan.");
         } else {
-            model.addAttribute("item", target);
+            model.addAttribute("item", item.get());
+            model.addAttribute("noFaktur", noFaktur);
+
             if (fisik != null) {
-                String result = apotekService.compareAudit(target.getQuantity(), fisik);
+                String result = apotekService.compareAudit(item.get().getQuantity(), fisik);
                 model.addAttribute("auditResult", result);
                 model.addAttribute("fisik", fisik);
+
+                StokOpname opname = apotekService.performStokOpname(noFaktur, fisik);
+                if (opname != null) {
+                    model.addAttribute("opnameRecord", opname);
+                    model.addAttribute("opnameStatus", opname.getStatus());
+                }
             }
         }
-
-        model.addAttribute("pageTitle", "Audit Stok Opname");
+        model.addAttribute("opnameHistory", apotekService.getHistoryOpname());
         return "audit";
     }
 
-    // --- REPORTS ---
-    @GetMapping("/reports")
-    public String reports(Model model) {
-        List<Obat> obatList = apotekService.getAllObat();
-        List<RiwayatKlinis> riwayatList = apotekService.getAllRiwayatKlinis();
+    @PostMapping("/audit/adjust")
+    public String auditAdjust(
+            @RequestParam("noFaktur") String noFaktur,
+            @RequestParam("fisik") int fisik,
+            RedirectAttributes redirect) {
+        apotekService.adjustStok(noFaktur, fisik);
+        redirect.addFlashAttribute("success", "Stok berhasil disesuaikan ke " + fisik + " unit.");
+        return "redirect:/audit";
+    }
 
-        // Calculate Revenue and Basic Financials
-        double totalRevenue = riwayatList.stream()
-                .mapToDouble(r -> {
-                    return obatList.stream()
-                            .filter(o -> o.getNamaObat().equalsIgnoreCase(r.getNamaObat()))
-                            .findFirst()
-                            .map(o -> o.getHargaBeli() * 1.3) // 30% Margin assume
-                            .orElse(0.0);
-                }).sum();
+    @GetMapping("/penjualan")
+    public String penjualan(Model model) {
+        model.addAttribute("obatList", apotekService.getAllObat());
+        model.addAttribute("penjualanList", apotekService.getAllPenjualan());
+        return "penjualan";
+    }
 
-        model.addAttribute("totalRevenue", totalRevenue);
-        model.addAttribute("totalMargin", totalRevenue * 0.23); // Estimated net margin
-        model.addAttribute("totalItems", obatList.size());
-        model.addAttribute("riwayatBarang", apotekService.getRiwayatBarang());
-        model.addAttribute("riwayatKlinis", riwayatList);
+    @PostMapping("/penjualan/process")
+    public String processPenjualan(
+            @RequestParam("namaPembeli") String namaPembeli,
+            @RequestParam("namaObat") List<String> namaObatList,
+            @RequestParam("jumlah") List<Integer> jumlahList,
+            RedirectAttributes redirect) {
+
+        Penjualan result = apotekService.createPenjualan(namaPembeli, namaObatList, jumlahList);
+        if (result != null && result.getId() != null) {
+            redirect.addFlashAttribute("success",
+                    "Penjualan berhasil! No Transaksi: " + result.getNoTransaksi() +
+                            " | Total: Rp " + String.format("%,.0f", result.getTotalHarga()));
+        } else {
+            redirect.addFlashAttribute("error", "Gagal memproses penjualan. Periksa stok!");
+        }
+        return "redirect:/penjualan";
+    }
+
+    @GetMapping("/mims")
+    public String mims(
+            @RequestParam(value = "keyword", required = false) String keyword,
+            Model model) {
+
+        List<Obat> obatList;
+        if (keyword != null && !keyword.isBlank()) {
+            obatList = apotekService.searchObat(keyword);
+            model.addAttribute("keyword", keyword);
+        } else {
+            obatList = apotekService.getAllObat();
+        }
         model.addAttribute("obatList", obatList);
-        model.addAttribute("pageTitle", "Laporan Sistem");
+        return "mims";
+    }
+
+    @GetMapping("/reports")
+    public String reports(
+            @RequestParam(value = "tanggalHarian", required = false) String tanggalHarian,
+            @RequestParam(value = "bulan", required = false) Integer bulan,
+            @RequestParam(value = "tahunBulanan", required = false) Integer tahunBulanan,
+            @RequestParam(value = "tahunTahunan", required = false) Integer tahunTahunan,
+            Model model) {
+
+        model.addAttribute("riwayatBarang", apotekService.getRiwayatBarang());
+        model.addAttribute("riwayatKlinis", apotekService.getRiwayatKlinis());
+
+        List<Obat> allObat = apotekService.getAllObat();
+        double totalRevenue = allObat.stream()
+                .mapToDouble(o -> {
+                    double hj = o.getHargaJualApotek() != null ? o.getHargaJualApotek() : 0;
+                    double hb = o.getHargaBeli() != null ? o.getHargaBeli() : 0;
+                    int qty = o.getQuantity() != null ? o.getQuantity() : 0;
+                    return (hj - hb) * qty;
+                })
+                .sum();
+        model.addAttribute("totalRevenue", totalRevenue);
+        model.addAttribute("totalMargin", totalRevenue);
+        model.addAttribute("activeItems",
+                allObat.stream().filter(o -> o.getQuantity() != null && o.getQuantity() > 0).count());
+        if (tanggalHarian != null && !tanggalHarian.isBlank()) {
+            LocalDate dateH = LocalDate.parse(tanggalHarian);
+            model.addAttribute("omsetHarian", apotekService.getOmsetHarian(dateH));
+            model.addAttribute("tanggalHarian", tanggalHarian);
+        }
+        if (bulan != null && tahunBulanan != null) {
+            model.addAttribute("omsetBulanan", apotekService.getOmsetBulanan(tahunBulanan, bulan));
+            model.addAttribute("bulan", bulan);
+            model.addAttribute("tahunBulanan", tahunBulanan);
+        }
+        if (tahunTahunan != null) {
+            model.addAttribute("omsetTahunan", apotekService.getOmsetTahunan(tahunTahunan));
+            model.addAttribute("tahunTahunan", tahunTahunan);
+        }
+
         return "reports";
     }
 
-    @GetMapping("/reports/export/pdf")
-    public void exportToPDF(jakarta.servlet.http.HttpServletResponse response) throws java.io.IOException {
-        response.setContentType("application/pdf");
-        String headerKey = "Content-Disposition";
-        String headerValue = "attachment; filename=Laporan_Apotek_" + LocalDate.now() + ".pdf";
-        response.setHeader(headerKey, headerValue);
+    @GetMapping("/reports/export/omset")
+    public void exportOmset(
+            @RequestParam("startDate") String startDateStr,
+            @RequestParam("endDate") String endDateStr,
+            HttpServletResponse response) throws IOException {
 
-        List<Obat> obatList = apotekService.getAllObat();
-        List<RiwayatKlinis> riwayatList = apotekService.getAllRiwayatKlinis();
+        LocalDate startDate = LocalDate.parse(startDateStr);
+        LocalDate endDate = LocalDate.parse(endDateStr);
 
-        com.lowagie.text.Document document = new com.lowagie.text.Document(com.lowagie.text.PageSize.A4);
-        com.lowagie.text.pdf.PdfWriter.getInstance(document, response.getOutputStream());
+        byte[] data = apotekService.exportOmsetExcel("Custom", startDate, endDate);
 
-        document.open();
-        com.lowagie.text.Font fontTitle = com.lowagie.text.FontFactory
-                .getFont(com.lowagie.text.FontFactory.HELVETICA_BOLD);
-        fontTitle.setSize(18);
+        response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+        response.setHeader("Content-Disposition",
+                "attachment; filename=Laporan_Omset_" + startDateStr + "_" + endDateStr + ".xlsx");
+        response.getOutputStream().write(data);
+        response.getOutputStream().flush();
+    }
 
-        com.lowagie.text.Paragraph title = new com.lowagie.text.Paragraph("LAPORAN KEUANGAN & OPERASIONAL APOTEK",
-                fontTitle);
-        title.setAlignment(com.lowagie.text.Paragraph.ALIGN_CENTER);
-        document.add(title);
+    @GetMapping("/reports/export/pbf")
+    public void exportPBF(HttpServletResponse response) throws IOException {
+        byte[] data = apotekService.exportPBFExcel();
 
-        document.add(new com.lowagie.text.Paragraph(" "));
-        document.add(new com.lowagie.text.Paragraph("Tanggal Laporan: " + LocalDate.now()));
-        document.add(new com.lowagie.text.Paragraph(" "));
-
-        // 1. Ringkasan Keuangan
-        document.add(new com.lowagie.text.Paragraph("1. RINGKASAN KEUANGAN",
-                com.lowagie.text.FontFactory.getFont(com.lowagie.text.FontFactory.HELVETICA_BOLD)));
-        double rev = riwayatList.stream()
-                .mapToDouble(r -> obatList.stream().filter(o -> o.getNamaObat().equalsIgnoreCase(r.getNamaObat()))
-                        .findFirst().map(o -> o.getHargaBeli() * 1.3).orElse(0.0))
-                .sum();
-        document.add(new com.lowagie.text.Paragraph("Total Pendapatan: Rp " + String.format("%,.2f", rev)));
-        document.add(new com.lowagie.text.Paragraph("Estimasi Margin (30%): Rp " + String.format("%,.2f", rev * 0.3)));
-        document.add(new com.lowagie.text.Paragraph(" "));
-
-        // 2. Daftar Stok
-        document.add(new com.lowagie.text.Paragraph("2. STATUS STOK BARANG",
-                com.lowagie.text.FontFactory.getFont(com.lowagie.text.FontFactory.HELVETICA_BOLD)));
-        document.add(new com.lowagie.text.Paragraph(" "));
-        com.lowagie.text.pdf.PdfPTable tableStok = new com.lowagie.text.pdf.PdfPTable(4);
-        tableStok.setWidthPercentage(100);
-        tableStok.addCell("Nama Obat");
-        tableStok.addCell("SKU");
-        tableStok.addCell("Qty");
-        tableStok.addCell("Status");
-
-        for (Obat o : obatList) {
-            tableStok.addCell(o.getNamaObat());
-            tableStok.addCell(o.getBarcode() != null ? o.getBarcode() : "-");
-            tableStok.addCell(String.valueOf(o.getQuantity()));
-            tableStok.addCell(o.getQuantity() <= 10 ? "KRITIS" : "AMAN");
-        }
-        document.add(tableStok);
-        document.add(new com.lowagie.text.Paragraph(" "));
-
-        // 3. Log Transaksi (Ringkasan)
-        document.add(new com.lowagie.text.Paragraph("3. RINGKASAN LAYANAN KLINIS (CDSS)",
-                com.lowagie.text.FontFactory.getFont(com.lowagie.text.FontFactory.HELVETICA_BOLD)));
-        document.add(new com.lowagie.text.Paragraph("Total Resep Diproses: " + riwayatList.size()));
-        document.add(new com.lowagie.text.Paragraph(" "));
-
-        com.lowagie.text.pdf.PdfPTable tableKlinis = new com.lowagie.text.pdf.PdfPTable(3);
-        tableKlinis.setWidthPercentage(100);
-        tableKlinis.addCell("Tanggal");
-        tableKlinis.addCell("Pasien");
-        tableKlinis.addCell("Terapi Obat");
-
-        for (RiwayatKlinis r : riwayatList) {
-            tableKlinis.addCell(r.getTglKunjungan().toString());
-            tableKlinis.addCell(r.getNamaPasien());
-            tableKlinis.addCell(r.getNamaObat());
-        }
-        document.add(tableKlinis);
-
-        document.add(new com.lowagie.text.Paragraph(" "));
-        document.add(new com.lowagie.text.Paragraph("--- Akhir Laporan Profesional ---", com.lowagie.text.FontFactory
-                .getFont(com.lowagie.text.FontFactory.HELVETICA, 10, com.lowagie.text.Font.ITALIC)));
-
-        document.close();
+        response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+        response.setHeader("Content-Disposition", "attachment; filename=Laporan_Input_PBF.xlsx");
+        response.getOutputStream().write(data);
+        response.getOutputStream().flush();
     }
 }

@@ -5,293 +5,443 @@
       <div class="card">
         <h3
           style="
-            margin-bottom: 2rem;
+            margin-bottom: 0.5rem;
             color: var(--primary);
             display: flex;
             align-items: center;
             gap: 12px;
           "
         >
-          <i class="fa-solid fa-microscope"></i> Sistem Pendukung Keputusan
-          Klinis (CDSS)
+          <i class="fa-solid fa-prescription"></i> Input Resep
         </h3>
+        <p
+          style="
+            color: var(--text-muted);
+            margin-bottom: 2rem;
+            font-size: 1.05rem;
+          "
+        >
+          Proses resep dengan validasi CDSS, informasi dokter, dan perhitungan
+          harga otomatis.
+        </p>
 
-        <!-- ALERTS -->
-        <div th:if="${message}" class="alert alert-success">
+        <div th:if="${success}" class="alert alert-success">
           <i class="fa-solid fa-circle-check"></i>
-          <span th:text="${message}"></span>
+          <span th:text="${success}"></span>
         </div>
-
-        <div
-          th:if="${warnings}"
-          class="alert alert-danger"
-          style="flex-direction: column; align-items: flex-start; gap: 0.5rem"
-        >
-          <div
-            style="
-              font-weight: 700;
-              display: flex;
-              align-items: center;
-              gap: 8px;
-            "
-          >
-            <i class="fa-solid fa-shield-virus"></i> PERINGATAN KEAMANAN
-            TERDETEKSI
-          </div>
-          <ul style="margin-left: 1.5rem; margin-top: 0.5rem">
-            <li th:each="w : ${warnings}" th:text="${w}"></li>
-          </ul>
+        <div th:if="${error}" class="alert alert-danger">
+          <i class="fa-solid fa-circle-xmark"></i>
+          <span th:text="${error}"></span>
         </div>
-
-        <form
+<form
           th:action="@{/prescription/check}"
-          th:object="${resep}"
           method="post"
+          th:unless="${checked}"
         >
-          <div
+<div
+            class="card"
+            style="background: #f0f9ff; border: 2px solid #bae6fd"
+          >
+            <h4 style="color: #0369a1; margin-bottom: 1rem; font-size: 0.95rem">
+              <i class="fa-solid fa-user-doctor"></i> INFORMASI DOKTER
+            </h4>
+            <div class="form-grid">
+              <div class="form-group">
+                <label>Nama Dokter</label>
+                <input
+                  type="text"
+                  name="namaDokter"
+                  th:value="${resep.namaDokter}"
+                  placeholder="dr. ..."
+                />
+              </div>
+              <div class="form-group">
+                <label>No Praktek / SIP</label>
+                <input
+                  type="text"
+                  name="noPraktek"
+                  th:value="${resep.noPraktek}"
+                  placeholder="SIP-..."
+                />
+              </div>
+              <div class="form-group">
+                <label>Nama RS / Klinik</label>
+                <input
+                  type="text"
+                  name="namaRumahSakit"
+                  th:value="${resep.namaRumahSakit}"
+                  placeholder="Nama rumah sakit/klinik..."
+                />
+              </div>
+            </div>
+          </div>
+<div
+            class="card"
             style="
-              display: grid;
-              grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-              gap: 3rem;
+              background: #fefce8;
+              border: 2px solid #fde68a;
+              margin-top: 1rem;
             "
           >
-            <!-- COLUMN 1: PROFIL PASIEN -->
-            <div
-              class="card"
-              style="background: rgba(255, 255, 255, 0.4); box-shadow: none"
-            >
-              <h4
-                style="
-                  margin-bottom: 1.5rem;
-                  color: var(--text-dark);
-                  display: flex;
-                  align-items: center;
-                  gap: 10px;
-                "
-              >
-                <i class="fa-solid fa-user-tag"></i> 1. Profil Pasien
-              </h4>
+            <h4 style="color: #92400e; margin-bottom: 1rem; font-size: 0.95rem">
+              <i class="fa-solid fa-user"></i> DATA PASIEN
+            </h4>
+            <div class="form-grid">
               <div class="form-group">
-                <label>NIK (ID Nasional)</label>
+                <label>NIK Pasien</label>
                 <input
                   type="text"
-                  th:field="*{nik}"
-                  placeholder="Contoh: 3201..."
+                  name="nik"
+                  th:value="${resep.nik}"
+                  placeholder="NIK..."
                   required
                 />
               </div>
               <div class="form-group">
-                <label>Nama Lengkap</label>
+                <label>Nama Pasien</label>
                 <input
                   type="text"
-                  th:field="*{namaPasien}"
-                  placeholder="Nama Sesuai KTP"
+                  name="namaPasien"
+                  th:value="${resep.namaPasien}"
+                  placeholder="Nama pasien..."
                   required
                 />
-              </div>
-              <div
-                style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem"
-              >
-                <div class="form-group">
-                  <label>Usia (Tahun)</label>
-                  <input type="number" name="usia" value="25" required />
-                </div>
-                <div class="form-group">
-                  <label>Berat (Kg)</label>
-                  <input type="number" name="berat" value="60" required />
-                </div>
               </div>
               <div class="form-group">
                 <label>Riwayat Alergi</label>
-                <select name="riwayatAlergi" style="background: white">
-                  <option value="-">Tidak Ada Alergi</option>
-                  <option value="Antibiotik">Antibiotik</option>
-                  <option value="Aspirin">Aspirin</option>
-                  <option value="NSAID">NSAID</option>
-                </select>
-              </div>
-            </div>
-
-            <!-- COLUMN 2: KONTEKS KLINIS -->
-            <div
-              class="card"
-              style="background: rgba(255, 255, 255, 0.4); box-shadow: none"
-            >
-              <h4
-                style="
-                  margin-bottom: 1.5rem;
-                  color: var(--text-dark);
-                  display: flex;
-                  align-items: center;
-                  gap: 10px;
-                "
-              >
-                <i class="fa-solid fa-file-medical"></i> 2. Konteks Klinis
-              </h4>
-              <div class="form-group">
-                <label>Diagnosis Utama</label>
                 <input
                   type="text"
-                  th:field="*{diagnosa}"
-                  placeholder="Contoh: Hipertensi"
-                  required
+                  name="riwayatAlergi"
+                  th:value="${riwayatAlergi}"
+                  placeholder="Alergi..."
                 />
               </div>
-
               <div class="form-group">
-                <label>Fungsi Ginjal (eGFR)</label>
+                <label>GFR (ml/min)</label>
                 <input
                   type="number"
                   name="gfr"
-                  placeholder="90"
-                  value="120"
-                  required
+                  th:value="${gfr}"
+                  placeholder="GFR..."
+                  step="0.1"
                 />
-                <div
-                  style="
-                    margin-top: 5px;
-                    font-size: 0.75rem;
-                    color: var(--text-muted);
-                  "
-                >
-                  <i class="fa-solid fa-info-circle"></i> Normal: > 90.
-                  Peringatan: < 60 (CKD Tahap 3)
-                </div>
               </div>
-
               <div class="form-group">
-                <label>Obat Yang Sedang Dikonsumsi</label>
+                <label>Medikasi Lain</label>
                 <input
                   type="text"
-                  name="medikasiLain}"
-                  placeholder="Pisahkan dengan koma"
+                  name="medikasiLain"
+                  th:value="${medikasiLain}"
+                  placeholder="Obat lain yg dikonsumsi..."
                 />
               </div>
-
-              <div
-                style="
-                  background: #eff6ff;
-                  padding: 1.5rem;
-                  border-radius: 12px;
-                  border: 1px solid #bfdbfe;
-                  margin-top: 1rem;
-                "
-              >
-                <label
-                  style="
-                    color: #1d4ed8;
-                    font-weight: 800;
-                    display: flex;
-                    align-items: center;
-                    gap: 8px;
-                  "
-                >
-                  <i class="fa-solid fa-pills"></i> PILIH OBAT UNTUK DIBERIKAN
-                </label>
+              <div class="form-group">
+                <label>Diagnosa</label>
+                <input
+                  type="text"
+                  name="diagnosa"
+                  th:value="${resep.diagnosa}"
+                  placeholder="Diagnosa..."
+                  required
+                />
+              </div>
+            </div>
+          </div>
+<div
+            class="card"
+            style="
+              background: #f0fdf4;
+              border: 2px solid #bbf7d0;
+              margin-top: 1rem;
+            "
+          >
+            <h4 style="color: #166534; margin-bottom: 1rem; font-size: 0.95rem">
+              <i class="fa-solid fa-pills"></i> DATA OBAT & HARGA
+            </h4>
+            <div class="form-grid">
+              <div class="form-group">
+                <label>Nama Obat</label>
                 <select
-                  th:field="*{namaObat}"
-                  style="margin-top: 0.5rem; background: white"
+                  name="namaObat"
+                  id="selectObat"
+                  onchange="updateHarga()"
+                  required
                 >
+                  <option value="">-- Pilih Obat --</option>
                   <option
-                    th:each="o : ${obatList}"
-                    th:value="${o.namaObat}"
-                    th:text="${o.namaObat} + ' (Stok: ' + ${o.quantity} + ')'"
+                    th:each="obat : ${obatList}"
+                    th:value="${obat.namaObat}"
+                    th:text="${obat.namaObat + ' (stok: ' + obat.quantity + ')'}"
+                    th:data-harga="${obat.hargaJualApotek}"
+                    th:selected="${resep.namaObat != null && resep.namaObat == obat.namaObat}"
                   ></option>
                 </select>
-                <div
-                  class="form-group"
-                  style="margin-top: 1rem; margin-bottom: 0"
+              </div>
+              <div class="form-group">
+                <label>Dosis</label>
+                <input
+                  type="text"
+                  name="dosis"
+                  th:value="${resep.dosis}"
+                  placeholder="3x1 tab..."
+                  required
+                />
+              </div>
+              <div class="form-group">
+                <label>Jumlah Obat</label>
+                <input
+                  type="number"
+                  name="jumlahObat"
+                  id="jumlahObat"
+                  th:value="${resep.jumlahObat}"
+                  placeholder="Qty"
+                  min="1"
+                  value="1"
+                  oninput="calcTotal()"
+                />
+              </div>
+              <div class="form-group">
+                <label>Harga Per Item (Rp)</label>
+                <input
+                  type="number"
+                  name="hargaObat"
+                  id="hargaObat"
+                  th:value="${resep.hargaObat}"
+                  placeholder="Auto dari pilihan obat"
+                  step="0.01"
+                  oninput="calcTotal()"
+                />
+              </div>
+            </div>
+
+            <h4
+              style="
+                color: #166534;
+                margin-top: 1.5rem;
+                margin-bottom: 1rem;
+                font-size: 0.95rem;
+              "
+            >
+              <i class="fa-solid fa-receipt"></i> BIAYA TAMBAHAN
+            </h4>
+            <div class="form-grid">
+              <div class="form-group">
+                <label>Tuslah (Rp)</label>
+                <input
+                  type="number"
+                  name="tuslah"
+                  id="tuslah"
+                  th:value="${resep.tuslah}"
+                  placeholder="Biaya tuslah..."
+                  step="0.01"
+                  value="0"
+                  oninput="calcTotal()"
+                />
+              </div>
+              <div class="form-group">
+                <label>Embalase (Rp)</label>
+                <input
+                  type="number"
+                  name="embalase"
+                  id="embalase"
+                  th:value="${resep.embalase}"
+                  placeholder="Biaya embalase..."
+                  step="0.01"
+                  value="0"
+                  oninput="calcTotal()"
+                />
+              </div>
+              <div class="form-group">
+                <label style="font-weight: 800; color: #166534"
+                  >TOTAL HARGA (Rp)</label
                 >
-                  <label style="font-size: 0.8rem">Dosis / Frekuensi</label>
-                  <input
-                    type="text"
-                    th:field="*{dosis}"
-                    placeholder="Misal: 500mg 3x1"
-                    style="background: white"
-                    required
-                  />
-                </div>
+                <input
+                  type="text"
+                  id="totalHargaDisplay"
+                  readonly
+                  style="
+                    background: #dcfce7;
+                    font-weight: 900;
+                    font-size: 1.3rem;
+                    color: #166534;
+                    border-color: #86efac;
+                  "
+                  value="Rp 0"
+                />
               </div>
             </div>
           </div>
 
-          <div
-            style="
-              margin-top: 3rem;
-              display: flex;
-              justify-content: flex-end;
-              gap: 1.5rem;
-              align-items: center;
-              flex-wrap: wrap;
-            "
+          <button
+            type="submit"
+            class="btn btn-primary"
+            style="margin-top: 1.5rem; width: 100%"
           >
-            <!-- HIDDEN INPUTS TO PRESERVE STATE DURING CONFIRMATION -->
-            <input
-              type="hidden"
-              name="riwayatAlergi"
-              th:value="${riwayatAlergi}"
-            />
-            <input type="hidden" name="gfr" th:value="${gfr}" />
-            <input
-              type="hidden"
-              name="medikasiLain"
-              th:value="${medikasiLain}"
-            />
-
-            <span style="font-size: 0.9rem; color: var(--text-muted)">
-              <i class="fa-solid fa-shield-halved"></i> Mesin Aturan AI Aktif
-            </span>
-
-            <!-- STEP 1: INITIAL CHECK -->
-            <button
-              th:if="${showConfirm == null}"
-              type="submit"
-              class="btn btn-primary"
-              style="
-                padding: 1rem 3rem;
-                font-size: 1.1rem;
-                border-radius: 50px;
-                min-width: 100%;
-              "
-            >
-              <i class="fa-solid fa-vial-circle-check"></i> CEK KEAMANAN KLINIS
-            </button>
-
-            <!-- STEP 2: CONFIRMATION -->
-            <div
-              th:if="${showConfirm}"
-              style="display: flex; gap: 1rem; width: 100%"
-            >
-              <a
-                th:href="@{/prescription}"
-                class="btn"
-                style="
-                  flex: 1;
-                  background: var(--secondary);
-                  color: white;
-                  border-radius: 50px;
-                  padding: 1rem;
-                  text-align: center;
-                "
-              >
-                <i class="fa-solid fa-rotate-left"></i> Batal
-              </a>
-              <button
-                type="submit"
-                name="confirm"
-                value="true"
-                class="btn"
-                th:style="${status == 'danger'} ? 'flex: 2; background: #dc2626; color: white; border-radius: 50px; padding: 1rem;' : 'flex: 2; background: #059669; color: white; border-radius: 50px; padding: 1rem;'"
-              >
-                <i class="fa-solid fa-circle-check"></i>
-                <span
-                  th:text="${status == 'danger'} ? 'TETAP BERIKAN OBAT (OVERRIDE)' : 'LANJUT BERIKAN OBAT'"
-                ></span>
-              </button>
+            <i class="fa-solid fa-stethoscope"></i> CEK KEAMANAN RESEP (CDSS)
+          </button>
+        </form>
+<div th:if="${checked}" style="animation: fadeIn 0.5s ease-out">
+<div
+            th:if="${!warnings.isEmpty()}"
+            class="alert alert-danger"
+            style="flex-direction: column; align-items: start"
+          >
+            <div style="font-weight: 800; margin-bottom: 0.5rem">
+              <i class="fa-solid fa-triangle-exclamation"></i> PERINGATAN CDSS
+              DITEMUKAN:
+            </div>
+            <ul style="margin-left: 1.5rem">
+              <li
+                th:each="w : ${warnings}"
+                th:text="${w}"
+                style="margin-bottom: 4px"
+              ></li>
+            </ul>
+          </div>
+          <div th:if="${warnings.isEmpty()}" class="alert alert-success">
+            <i class="fa-solid fa-shield-check"></i>
+            <b>AMAN — Tidak ada peringatan interaksi obat ditemukan.</b>
+          </div>
+<div
+            class="card"
+            style="background: #f8fafc; border: 2px solid var(--glass-border)"
+          >
+            <h4 style="margin-bottom: 1rem">Ringkasan Resep</h4>
+            <div class="form-grid">
+              <div>
+                <b>Dokter:</b>
+                <span th:text="${resep.namaDokter ?: '-'}"></span>
+              </div>
+              <div>
+                <b>No Praktek:</b>
+                <span th:text="${resep.noPraktek ?: '-'}"></span>
+              </div>
+              <div>
+                <b>RS/Klinik:</b>
+                <span th:text="${resep.namaRumahSakit ?: '-'}"></span>
+              </div>
+              <div>
+                <b>Pasien:</b> <span th:text="${resep.namaPasien}"></span>
+              </div>
+              <div><b>NIK:</b> <span th:text="${resep.nik}"></span></div>
+              <div>
+                <b>Diagnosa:</b> <span th:text="${resep.diagnosa}"></span>
+              </div>
+              <div><b>Obat:</b> <span th:text="${resep.namaObat}"></span></div>
+              <div><b>Dosis:</b> <span th:text="${resep.dosis}"></span></div>
+              <div>
+                <b>Qty:</b> <span th:text="${resep.jumlahObat ?: 1}"></span>
+              </div>
+              <div>
+                <b>Harga/item:</b> Rp
+                <span th:text="${resep.hargaObat ?: 0}"></span>
+              </div>
+              <div>
+                <b>Tuslah:</b> Rp <span th:text="${resep.tuslah ?: 0}"></span>
+              </div>
+              <div>
+                <b>Embalase:</b> Rp
+                <span th:text="${resep.embalase ?: 0}"></span>
+              </div>
             </div>
           </div>
-        </form>
+<form th:action="@{/prescription/confirm}" method="post">
+            <input type="hidden" name="nik" th:value="${resep.nik}" />
+            <input
+              type="hidden"
+              name="namaPasien"
+              th:value="${resep.namaPasien}"
+            />
+            <input type="hidden" name="diagnosa" th:value="${resep.diagnosa}" />
+            <input type="hidden" name="namaObat" th:value="${resep.namaObat}" />
+            <input type="hidden" name="dosis" th:value="${resep.dosis}" />
+            <input
+              type="hidden"
+              name="namaDokter"
+              th:value="${resep.namaDokter}"
+            />
+            <input
+              type="hidden"
+              name="noPraktek"
+              th:value="${resep.noPraktek}"
+            />
+            <input
+              type="hidden"
+              name="namaRumahSakit"
+              th:value="${resep.namaRumahSakit}"
+            />
+            <input
+              type="hidden"
+              name="hargaObat"
+              th:value="${resep.hargaObat}"
+            />
+            <input
+              type="hidden"
+              name="jumlahObat"
+              th:value="${resep.jumlahObat}"
+            />
+            <input type="hidden" name="tuslah" th:value="${resep.tuslah}" />
+            <input type="hidden" name="embalase" th:value="${resep.embalase}" />
+
+            <div
+              style="
+                display: flex;
+                gap: 1rem;
+                margin-top: 1.5rem;
+                flex-wrap: wrap;
+              "
+            >
+              <button
+                type="submit"
+                class="btn btn-success"
+                style="flex: 1; min-width: 200px"
+              >
+                <i class="fa-solid fa-check"></i> KONFIRMASI & SERAHKAN OBAT
+              </button>
+              <a
+                th:href="@{/prescription}"
+                class="btn btn-accent"
+                style="
+                  flex: 1;
+                  min-width: 200px;
+                  text-align: center;
+                  text-decoration: none;
+                "
+              >
+                <i class="fa-solid fa-xmark"></i> BATALKAN
+              </a>
+            </div>
+          </form>
+        </div>
       </div>
+
+      <script>
+        function updateHarga() {
+          var sel = document.getElementById("selectObat");
+          var selected = sel.options[sel.selectedIndex];
+          var harga = selected.getAttribute("data-harga");
+          if (harga && harga !== "null") {
+            document.getElementById("hargaObat").value = harga;
+          }
+          calcTotal();
+        }
+
+        function calcTotal() {
+          var harga =
+            parseFloat(document.getElementById("hargaObat").value) || 0;
+          var qty = parseInt(document.getElementById("jumlahObat").value) || 1;
+          var tuslah = parseFloat(document.getElementById("tuslah").value) || 0;
+          var embalase =
+            parseFloat(document.getElementById("embalase").value) || 0;
+          var total = harga * qty + tuslah + embalase;
+          document.getElementById("totalHargaDisplay").value =
+            "Rp " + total.toLocaleString("id-ID");
+        }
+
+        window.addEventListener("load", function () {
+          calcTotal();
+        });
+      </script>
     </div>
   </body>
 </html>

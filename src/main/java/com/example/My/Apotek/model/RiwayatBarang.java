@@ -18,14 +18,26 @@ public class RiwayatBarang {
     @Column(name = "nomor_batch")
     private String nomorBatch;
 
-    private String tipe; // MASUK / KELUAR
+    private String tipe;
 
     private Integer quantity;
 
     private LocalDateTime timestamp;
 
+    @Column(name = "nama_pbf")
+    private String namaPBF;
+
+    @Column(name = "harga_beli")
+    private Double hargaBeli;
+
+    @Column(name = "total_harga")
+    private Double totalHarga;
+
     @PrePersist
     protected void onCreate() {
         timestamp = LocalDateTime.now();
+        if (hargaBeli != null && quantity != null) {
+            totalHarga = hargaBeli * quantity;
+        }
     }
 }

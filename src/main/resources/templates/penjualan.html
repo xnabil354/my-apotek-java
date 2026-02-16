@@ -1,0 +1,274 @@
+<!doctype html>
+<html xmlns:th="http://www.thymeleaf.org" layout:decorate="~{layout}">
+  <body>
+    <div layout:fragment="content">
+      <div class="card">
+        <h3
+          style="
+            margin-bottom: 0.5rem;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+          "
+        >
+          <i class="fa-solid fa-cart-shopping"></i> Penjualan Langsung
+        </h3>
+        <p
+          style="
+            color: var(--text-muted);
+            margin-bottom: 2rem;
+            font-size: 1.05rem;
+          "
+        >
+          Input pembelian obat langsung oleh pasien / umum (non-resep / OTC).
+        </p>
+
+        <div th:if="${success}" class="alert alert-success">
+          <i class="fa-solid fa-circle-check"></i>
+          <span th:text="${success}"></span>
+        </div>
+        <div th:if="${error}" class="alert alert-danger">
+          <i class="fa-solid fa-circle-xmark"></i>
+          <span th:text="${error}"></span>
+        </div>
+
+        <form
+          th:action="@{/penjualan/process}"
+          method="post"
+          id="penjualanForm"
+        >
+          <div class="form-group">
+            <label><i class="fa-solid fa-user"></i> Nama Pembeli</label>
+            <input
+              type="text"
+              name="namaPembeli"
+              placeholder="Nama pembeli / umum..."
+              required
+            />
+          </div>
+
+          <div
+            class="card"
+            style="background: #f0fdf4; border: 2px solid #bbf7d0"
+          >
+            <h4 style="color: #166534; margin-bottom: 1rem">
+              <i class="fa-solid fa-pills"></i> Daftar Obat
+            </h4>
+            <div id="itemContainer">
+              <div
+                class="item-row"
+                style="
+                  display: flex;
+                  gap: 0.8rem;
+                  margin-bottom: 0.8rem;
+                  flex-wrap: wrap;
+                  align-items: end;
+                "
+              >
+                <div
+                  class="form-group"
+                  style="flex: 2; min-width: 180px; margin-bottom: 0"
+                >
+                  <label>Obat</label>
+                  <select
+                    name="namaObat"
+                    class="obat-select"
+                    onchange="updateItemHarga(this)"
+                    required
+                  >
+                    <option value="">-- Pilih Obat --</option>
+                    <option
+                      th:each="obat : ${obatList}"
+                      th:value="${obat.namaObat}"
+                      th:text="${obat.namaObat + ' (stok: ' + obat.quantity + ')'}"
+                      th:data-harga="${obat.hargaJualApotek != null ? obat.hargaJualApotek : obat.hargaBeli}"
+                    ></option>
+                  </select>
+                </div>
+                <div
+                  class="form-group"
+                  style="flex: 1; min-width: 80px; margin-bottom: 0"
+                >
+                  <label>Qty</label>
+                  <input
+                    type="number"
+                    name="jumlah"
+                    min="1"
+                    value="1"
+                    onchange="calcGrandTotal()"
+                    oninput="calcGrandTotal()"
+                    required
+                  />
+                </div>
+                <div
+                  class="form-group"
+                  style="flex: 1; min-width: 120px; margin-bottom: 0"
+                >
+                  <label>Harga</label>
+                  <input
+                    type="text"
+                    class="harga-display"
+                    readonly
+                    style="background: #e2e8f0; font-weight: 700"
+                    value="Rp 0"
+                  />
+                </div>
+              </div>
+            </div>
+            <button
+              type="button"
+              class="btn btn-secondary"
+              onclick="addItem()"
+              style="margin-top: 0.5rem"
+            >
+              <i class="fa-solid fa-plus"></i> Tambah Item
+            </button>
+          </div>
+
+          <div
+            class="card"
+            style="
+              background: #1e293b;
+              color: white;
+              text-align: center;
+              margin-top: 1rem;
+            "
+          >
+            <div
+              style="
+                font-size: 0.85rem;
+                letter-spacing: 1px;
+                text-transform: uppercase;
+                color: rgba(255, 255, 255, 0.6);
+              "
+            >
+              Grand Total
+            </div>
+            <div
+              id="grandTotal"
+              style="font-size: 2.5rem; font-weight: 900; margin-top: 0.5rem"
+            >
+              Rp 0
+            </div>
+          </div>
+
+          <button
+            type="submit"
+            class="btn btn-success"
+            style="
+              width: 100%;
+              height: 55px;
+              margin-top: 1rem;
+              font-size: 1.05rem;
+            "
+          >
+            <i class="fa-solid fa-check-circle"></i> PROSES PENJUALAN
+          </button>
+        </form>
+      </div>
+<div class="card">
+        <h3 style="margin-bottom: 1.5rem">
+          <i class="fa-solid fa-clock-rotate-left"></i> Riwayat Penjualan
+        </h3>
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>No Transaksi</th>
+                <th>Tanggal</th>
+                <th>Pembeli</th>
+                <th>Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr th:each="p : ${penjualanList}">
+                <td
+                  style="font-family: monospace; font-weight: 600"
+                  th:text="${p.noTransaksi}"
+                >
+                  -
+                </td>
+                <td th:text="${p.tanggal}">-</td>
+                <td th:text="${p.namaPembeli}">-</td>
+                <td
+                  style="font-weight: 700"
+                  th:text="${p.totalHarga != null ? 'Rp ' + #numbers.formatDecimal(p.totalHarga, 0, 'COMMA', 0, 'POINT') : 'Rp 0'}"
+                >
+                  -
+                </td>
+              </tr>
+              <tr th:if="${penjualanList == null || penjualanList.isEmpty()}">
+                <td
+                  colspan="4"
+                  style="
+                    text-align: center;
+                    color: var(--text-muted);
+                    padding: 2rem;
+                  "
+                >
+                  Belum ada transaksi penjualan
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <script>
+        var obatOptions = document.querySelector(".obat-select").innerHTML;
+
+        function addItem() {
+          var container = document.getElementById("itemContainer");
+          var row = document.createElement("div");
+          row.className = "item-row";
+          row.style.cssText =
+            "display: flex; gap: 0.8rem; margin-bottom: 0.8rem; flex-wrap: wrap; align-items: end";
+          row.innerHTML =
+            '<div class="form-group" style="flex: 2; min-width: 180px; margin-bottom: 0">' +
+            "<label>Obat</label>" +
+            '<select name="namaObat" class="obat-select" onchange="updateItemHarga(this)" required>' +
+            obatOptions +
+            "</select>" +
+            "</div>" +
+            '<div class="form-group" style="flex: 1; min-width: 80px; margin-bottom: 0">' +
+            "<label>Qty</label>" +
+            '<input type="number" name="jumlah" min="1" value="1" onchange="calcGrandTotal()" oninput="calcGrandTotal()" required />' +
+            "</div>" +
+            '<div class="form-group" style="flex: 1; min-width: 120px; margin-bottom: 0">' +
+            "<label>Harga</label>" +
+            '<input type="text" class="harga-display" readonly style="background: #e2e8f0; font-weight: 700" value="Rp 0" />' +
+            "</div>" +
+            '<button type="button" class="btn btn-accent" onclick="this.parentElement.remove(); calcGrandTotal()" style="height: 46px; padding: 0 14px">' +
+            '<i class="fa-solid fa-trash"></i>' +
+            "</button>";
+          container.appendChild(row);
+        }
+
+        function updateItemHarga(sel) {
+          var selected = sel.options[sel.selectedIndex];
+          var harga = parseFloat(selected.getAttribute("data-harga")) || 0;
+          var row = sel.closest(".item-row");
+          row.querySelector(".harga-display").value =
+            "Rp " + harga.toLocaleString("id-ID");
+          calcGrandTotal();
+        }
+
+        function calcGrandTotal() {
+          var rows = document.querySelectorAll(".item-row");
+          var total = 0;
+          rows.forEach(function (row) {
+            var sel = row.querySelector(".obat-select");
+            var selected = sel.options[sel.selectedIndex];
+            var harga = parseFloat(selected.getAttribute("data-harga")) || 0;
+            var qty =
+              parseInt(row.querySelector('input[name="jumlah"]').value) || 1;
+            total += harga * qty;
+          });
+          document.getElementById("grandTotal").textContent =
+            "Rp " + total.toLocaleString("id-ID");
+        }
+      </script>
+    </div>
+  </body>
+</html>

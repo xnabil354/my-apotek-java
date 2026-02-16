@@ -12,19 +12,23 @@
             gap: 12px;
           "
         >
-          <i class="fa-solid fa-scale-balanced"></i> Stock Opname (Audit Flow)
+          <i class="fa-solid fa-scale-balanced"></i> Stok Opname (Audit)
         </h3>
         <p
           style="
             color: var(--text-muted);
-            margin-bottom: 2.5rem;
-            font-size: 1.1rem;
+            margin-bottom: 2rem;
+            font-size: 1.05rem;
           "
         >
-          Verified inventory auditing process. Follow the secure sequence: Scan
-          -> Verify System -> Manual Count -> Final Validation.
+          Bandingkan stok fisik vs sistem, lihat selisih, dan sesuaikan stok
+          jika diperlukan.
         </p>
 
+        <div th:if="${success}" class="alert alert-success">
+          <i class="fa-solid fa-circle-check"></i>
+          <span th:text="${success}"></span>
+        </div>
         <div th:if="${error}" class="alert alert-danger">
           <i class="fa-solid fa-circle-xmark"></i>
           <span th:text="${error}"></span>
@@ -40,9 +44,7 @@
           ></i>
           <b th:text="${auditResult}"></b>
         </div>
-
-        <form th:action="@{/audit/check}" method="post">
-          <!-- STEP 1: SCAN -->
+<form th:action="@{/audit/check}" method="post">
           <div
             class="card"
             style="
@@ -60,48 +62,54 @@
                 gap: 8px;
               "
             >
-              <i class="fa-solid fa-camera-retro"></i> 1. SCAN BARCODE / SKU
+              <i class="fa-solid fa-file-invoice"></i> 1. MASUKKAN NO FAKTUR
             </label>
-            <div style="display: flex; gap: 1rem; margin-top: 1rem">
+            <div
+              style="
+                display: flex;
+                gap: 1rem;
+                margin-top: 1rem;
+                flex-wrap: wrap;
+              "
+            >
               <input
                 type="text"
-                name="barcode"
-                th:value="${item != null ? item.barcode : ''}"
-                placeholder="Ready for scan..."
+                name="noFaktur"
+                th:value="${noFaktur}"
+                placeholder="No Faktur..."
                 required
                 style="
                   flex: 1;
-                  font-size: 1.2rem;
-                  height: 60px;
-                  border-radius: 30px;
-                  padding: 0 2rem;
+                  min-width: 200px;
+                  font-size: 1.1rem;
+                  height: 55px;
+                  border-radius: 14px;
+                  padding: 0 1.5rem;
                 "
               />
               <button
                 type="submit"
                 class="btn btn-primary"
                 style="
-                  height: 60px;
-                  border-radius: 30px;
-                  padding: 0 2.5rem;
-                  font-size: 1rem;
+                  height: 55px;
+                  border-radius: 14px;
+                  padding: 0 2rem;
+                  white-space: nowrap;
                 "
               >
-                <i class="fa-solid fa-magnifying-glass"></i> VERIFY ITEM
+                <i class="fa-solid fa-magnifying-glass"></i> CARI OBAT
               </button>
             </div>
           </div>
-
-          <div
+<div
             th:if="${item}"
-            style="margin-top: 3rem; animation: fadeIn 0.6s ease-out"
+            style="margin-top: 2rem; animation: fadeIn 0.5s ease-out"
           >
-            <!-- DATA COMPARISON -->
             <div
-              style="display: grid; grid-template-columns: 1fr 1fr; gap: 2.5rem"
+              style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem"
+              class="audit-grid"
             >
-              <!-- STEP 2: SYSTEM DATA -->
-              <div
+<div
                 class="card"
                 style="background: #eff6ff; border: 1px solid #bfdbfe"
               >
@@ -114,18 +122,14 @@
                     text-transform: uppercase;
                   "
                 >
-                  2. System Records
+                  2. Data Sistem
                 </h4>
-                <div style="margin-top: 1.5rem">
+                <div style="margin-top: 1rem">
                   <div
-                    style="
-                      font-weight: 800;
-                      font-size: 1.4rem;
-                      color: var(--text-dark);
-                    "
+                    style="font-weight: 800; font-size: 1.3rem"
                     th:text="${item.namaObat}"
                   >
-                    Name
+                    Nama
                   </div>
                   <div
                     style="
@@ -138,21 +142,20 @@
                     <span
                       style="font-family: monospace; font-weight: 600"
                       th:text="${item.nomorBatch}"
-                      >B-000</span
+                      >-</span
                     >
                   </div>
-
                   <div
                     style="
-                      margin-top: 2rem;
+                      margin-top: 1.5rem;
                       display: flex;
                       align-items: baseline;
-                      gap: 10px;
+                      gap: 8px;
                     "
                   >
                     <span
                       style="
-                        font-size: 3.5rem;
+                        font-size: 3rem;
                         font-weight: 900;
                         color: var(--primary);
                       "
@@ -160,14 +163,12 @@
                       >0</span
                     >
                     <span style="font-weight: 700; color: var(--text-muted)"
-                      >REGISTERED UNITS</span
+                      >UNIT DI SISTEM</span
                     >
                   </div>
                 </div>
               </div>
-
-              <!-- STEP 3: PHYSICAL INPUT -->
-              <div
+<div
                 class="card"
                 style="background: #fdfaf1; border: 1px solid #fef3c7"
               >
@@ -180,25 +181,23 @@
                     text-transform: uppercase;
                   "
                 >
-                  3. Physical Inventory Count
+                  3. Stok Fisik
                 </h4>
-                <div class="form-group" style="margin-top: 1.5rem">
-                  <label style="color: #92400e"
-                    >Manually Counted Quantity:</label
-                  >
+                <div class="form-group" style="margin-top: 1rem">
+                  <label style="color: #92400e">Jumlah Stok Fisik:</label>
                   <input
                     type="number"
                     name="fisik"
                     th:value="${fisik}"
-                    placeholder="Enter count..."
+                    placeholder="Hitung fisik..."
                     required
                     style="
                       background: white;
                       border-color: #fcd34d;
-                      font-size: 2rem;
+                      font-size: 1.8rem;
                       font-weight: 800;
                       text-align: center;
-                      height: 80px;
+                      height: 70px;
                     "
                   />
                 </div>
@@ -207,44 +206,117 @@
                   class="btn"
                   style="
                     width: 100%;
-                    margin-top: 1rem;
+                    margin-top: 0.5rem;
                     background: #92400e;
                     color: white;
-                    height: 60px;
-                    font-size: 1.1rem;
-                    box-shadow: 0 4px 12px rgba(146, 64, 14, 0.3);
+                    height: 50px;
                   "
                 >
-                  <i class="fa-solid fa-calculator"></i> PERFORM AUDIT
-                  COMPARISON
+                  <i class="fa-solid fa-calculator"></i> BANDINGKAN
                 </button>
               </div>
             </div>
           </div>
         </form>
-
-        <div
-          style="
-            margin-top: 3rem;
-            text-align: center;
-            border-top: 1px solid var(--glass-border);
-            padding-top: 2rem;
-          "
-        >
-          <a
-            th:href="@{/audit}"
-            class="nav-link"
-            style="
-              display: inline-flex;
-              width: auto;
-              background: var(--secondary);
-              color: white;
-            "
+<div th:if="${opnameRecord}" style="margin-top: 1.5rem">
+<div
+            th:if="${opnameStatus == 'NORMAL'}"
+            class="alert alert-success"
+            style="text-align: center; font-weight: 700; font-size: 1.05rem"
           >
-            <i class="fa-solid fa-rotate-left"></i> CLEAR AUDIT STATE
-          </a>
+            <i class="fa-solid fa-circle-check"></i>
+            Selisih dalam toleransi (≤5%). Stok otomatis disesuaikan ke
+            <span th:text="${fisik}">0</span> unit.
+          </div>
+<form
+            th:if="${opnameStatus == 'SELISIH TINGGI'}"
+            th:action="@{/audit/adjust}"
+            method="post"
+            style="display: inline"
+          >
+            <input type="hidden" name="noFaktur" th:value="${noFaktur}" />
+            <input type="hidden" name="fisik" th:value="${fisik}" />
+            <button
+              type="submit"
+              class="btn btn-warning"
+              style="width: 100%; height: 55px; font-size: 1rem"
+              onclick="
+                return confirm(
+                  'SELISIH TINGGI! Yakin ingin menyesuaikan stok?',
+                );
+              "
+            >
+              <i class="fa-solid fa-arrows-rotate"></i> APPROVAL: SESUAIKAN STOK
+              SISTEM → STOK FISIK (<span th:text="${fisik}"></span> unit)
+            </button>
+          </form>
         </div>
       </div>
+<div class="card">
+        <h3 style="margin-bottom: 1.5rem">
+          <i class="fa-solid fa-clock-rotate-left"></i> Riwayat Stok Opname
+        </h3>
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Waktu</th>
+                <th>No Faktur</th>
+                <th>Nama Obat</th>
+                <th>Stok Sistem</th>
+                <th>Stok Fisik</th>
+                <th>Selisih</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr th:each="op : ${opnameHistory}">
+                <td th:text="${op.tanggal}">-</td>
+                <td style="font-family: monospace" th:text="${op.noFaktur}">
+                  -
+                </td>
+                <td th:text="${op.namaObat}">-</td>
+                <td th:text="${op.stokSistem}">-</td>
+                <td th:text="${op.stokFisik}">-</td>
+                <td>
+                  <span
+                    th:text="${op.selisih}"
+                    th:style="${op.selisih != null && op.selisih != 0 ? 'color: var(--accent); font-weight: 800' : 'color: var(--success); font-weight: 600'}"
+                    >0</span
+                  >
+                </td>
+                <td>
+                  <span
+                    th:text="${op.status}"
+                    th:style="${op.status != null && op.status.contains('TINGGI') ? 'color: var(--accent); font-weight: 700' : 'color: var(--success); font-weight: 600'}"
+                    >-</span
+                  >
+                </td>
+              </tr>
+              <tr th:if="${opnameHistory == null || opnameHistory.isEmpty()}">
+                <td
+                  colspan="7"
+                  style="
+                    text-align: center;
+                    color: var(--text-muted);
+                    padding: 2rem;
+                  "
+                >
+                  Belum ada riwayat stok opname
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <style>
+        @media (max-width: 768px) {
+          .audit-grid {
+            grid-template-columns: 1fr !important;
+          }
+        }
+      </style>
     </div>
   </body>
 </html>
