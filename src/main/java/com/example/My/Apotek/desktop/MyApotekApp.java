@@ -18,10 +18,19 @@ import static com.example.My.Apotek.desktop.UIHelper.*;
 public class MyApotekApp extends JFrame {
     private static final String DB = "jdbc:h2:./data/apotek_db;AUTO_SERVER=TRUE";
     private static final String U = "sa", P = "";
+    private static Connection sharedConn;
+    private static boolean tablesReady = false;
     private JPanel contentPanel;
     private CardLayout cardLayout;
     private String userRole = "ADMIN_APOTEK";
     private String userName = "Admin Apotek";
+
+    static Connection getConn() throws SQLException {
+        if (sharedConn == null || sharedConn.isClosed()) {
+            sharedConn = DriverManager.getConnection(DB, U, P);
+        }
+        return sharedConn;
+    }
 
     public MyApotekApp() {
         setTitle("My Apotek Professional");
@@ -161,8 +170,6 @@ public class MyApotekApp extends JFrame {
                     "Konfirmasi Logout", JOptionPane.YES_NO_OPTION);
             if (confirm == JOptionPane.YES_OPTION) {
                 dispose();
-                userRole = null;
-                userName = null;
                 MyApotekApp newApp = new MyApotekApp();
                 if (!newApp.showLoginDialog()) {
                     System.exit(0);
@@ -266,7 +273,8 @@ public class MyApotekApp extends JFrame {
         JTable table = new JTable(model);
 
         btnAdd.addActionListener(e -> {
-            try (Connection c = DriverManager.getConnection(DB, U, P)) {
+            try {
+                Connection c = getConn();
                 double hb = parseNum(f[3]), ppn = hb * 1.11, hj = parseNum(f[7]), hp = parseNum(f[9]);
                 int qty = (int) parseNum(f[1]);
                 PreparedStatement ps = c.prepareStatement(
@@ -313,8 +321,9 @@ public class MyApotekApp extends JFrame {
 
     private void refreshInv(DefaultTableModel m) {
         m.setRowCount(0);
-        try (Connection c = DriverManager.getConnection(DB, U, P);
-                ResultSet rs = c.createStatement().executeQuery("SELECT * FROM obat ORDER BY nama_obat")) {
+        try {
+            Connection c = getConn();
+            ResultSet rs = c.createStatement().executeQuery("SELECT * FROM obat ORDER BY nama_obat");
             while (rs.next())
                 m.addRow(new Object[] { rs.getString("no_faktur"), rs.getString("nama_obat"),
                         rs.getString("nomor_batch"), rs.getString("nama_pbf"), rs.getString("satuan"),
@@ -377,7 +386,8 @@ public class MyApotekApp extends JFrame {
         result.setBorder(BorderFactory.createEmptyBorder(16, 16, 16, 16));
 
         btnRx.addActionListener(e -> {
-            try (Connection c = DriverManager.getConnection(DB, U, P)) {
+            try {
+                Connection c = getConn();
                 String obat = f[1].getText();
                 int qty = f[5].getText().isEmpty() ? 1 : Integer.parseInt(f[5].getText());
                 double harga = parseNum(f[7]), tuslah = parseNum(f[9]), embalase = parseNum(f[11]);
@@ -468,7 +478,8 @@ public class MyApotekApp extends JFrame {
         JTable table = new JTable(model);
 
         btnC.addActionListener(e -> {
-            try (Connection c = DriverManager.getConnection(DB, U, P)) {
+            try {
+                Connection c = getConn();
                 ResultSet rs = c.createStatement().executeQuery(
                         "SELECT * FROM obat WHERE no_faktur = '" + tfF.getText().replace("'", "''") + "'");
                 if (!rs.next()) {
@@ -509,7 +520,8 @@ public class MyApotekApp extends JFrame {
                         "Akses Ditolak", JOptionPane.WARNING_MESSAGE);
                 return;
             }
-            try (Connection c = DriverManager.getConnection(DB, U, P)) {
+            try {
+                Connection c = getConn();
                 int fisik = Integer.parseInt(tfS.getText());
                 ResultSet rs = c.createStatement().executeQuery(
                         "SELECT quantity FROM obat WHERE no_faktur = '" + tfF.getText().replace("'", "''") + "'");
@@ -551,8 +563,9 @@ public class MyApotekApp extends JFrame {
 
     private void refreshOpn(DefaultTableModel m) {
         m.setRowCount(0);
-        try (Connection c = DriverManager.getConnection(DB, U, P);
-                ResultSet rs = c.createStatement().executeQuery("SELECT * FROM stok_opname ORDER BY tanggal DESC")) {
+        try {
+            Connection c = getConn();
+            ResultSet rs = c.createStatement().executeQuery("SELECT * FROM stok_opname ORDER BY tanggal DESC");
             while (rs.next())
                 m.addRow(new Object[] { rs.getTimestamp("tanggal"), rs.getString("no_faktur"),
                         rs.getString("nama_obat"), rs.getInt("stok_sistem"), rs.getInt("stok_fisik"),
@@ -597,7 +610,8 @@ public class MyApotekApp extends JFrame {
         JTable table = new JTable(model);
 
         b1.addActionListener(e -> {
-            try (Connection c = DriverManager.getConnection(DB, U, P)) {
+            try {
+                Connection c = getConn();
                 LocalDate d = LocalDate.parse(tfDate.getText());
                 double t = 0;
                 ResultSet rs = c.createStatement().executeQuery(
@@ -631,9 +645,10 @@ public class MyApotekApp extends JFrame {
 
     private void refreshRep(DefaultTableModel m) {
         m.setRowCount(0);
-        try (Connection c = DriverManager.getConnection(DB, U, P);
-                ResultSet rs = c.createStatement()
-                        .executeQuery("SELECT * FROM riwayat_barang ORDER BY timestamp DESC")) {
+        try {
+            Connection c = getConn();
+            ResultSet rs = c.createStatement()
+                    .executeQuery("SELECT * FROM riwayat_barang ORDER BY timestamp DESC");
             while (rs.next())
                 m.addRow(new Object[] { rs.getTimestamp("timestamp"), rs.getString("nama_obat"), rs.getString("tipe"),
                         rs.getInt("quantity"), rs.getString("nama_pbf"), fmt(rs.getDouble("harga_beli")),
@@ -685,7 +700,8 @@ public class MyApotekApp extends JFrame {
         JTable histT = new JTable(hist);
 
         btnA.addActionListener(e -> {
-            try (Connection c = DriverManager.getConnection(DB, U, P)) {
+            try {
+                Connection c = getConn();
                 String nama = tfO.getText();
                 int qty = Integer.parseInt(tfQ.getText());
                 ResultSet rs = c.createStatement()
@@ -710,7 +726,8 @@ public class MyApotekApp extends JFrame {
         });
 
         btnP.addActionListener(e -> {
-            try (Connection c = DriverManager.getConnection(DB, U, P)) {
+            try {
+                Connection c = getConn();
                 String noTrx = "TRX-" + System.currentTimeMillis();
                 double gt = 0;
                 for (int i = 0; i < cart.getRowCount(); i++) {
@@ -763,8 +780,9 @@ public class MyApotekApp extends JFrame {
 
     private void refreshHist(DefaultTableModel m) {
         m.setRowCount(0);
-        try (Connection c = DriverManager.getConnection(DB, U, P);
-                ResultSet rs = c.createStatement().executeQuery("SELECT * FROM penjualan ORDER BY tanggal DESC")) {
+        try {
+            Connection c = getConn();
+            ResultSet rs = c.createStatement().executeQuery("SELECT * FROM penjualan ORDER BY tanggal DESC");
             while (rs.next()) {
                 double totalH = rs.getDouble("total_harga");
                 double dskP = 0, totalA = totalH;
@@ -812,8 +830,9 @@ public class MyApotekApp extends JFrame {
             String sql = kw.isEmpty() ? "SELECT * FROM obat ORDER BY nama_obat"
                     : "SELECT * FROM obat WHERE LOWER(nama_obat) LIKE '%" + kw.toLowerCase().replace("'", "''")
                             + "%' ORDER BY nama_obat";
-            try (Connection c = DriverManager.getConnection(DB, U, P);
-                    ResultSet rs = c.createStatement().executeQuery(sql)) {
+            try {
+                Connection c = getConn();
+                ResultSet rs = c.createStatement().executeQuery(sql);
                 while (rs.next())
                     model.addRow(new Object[] { rs.getString("nama_obat"), rs.getString("golongan"),
                             rs.getString("satuan"), rs.getString("indikasi"), fmt(rs.getDouble("harga_jual_apotek")),
@@ -840,7 +859,8 @@ public class MyApotekApp extends JFrame {
             fc.setSelectedFile(new File("Laporan_Omset.xlsx"));
             if (fc.showSaveDialog(this) != JFileChooser.APPROVE_OPTION)
                 return;
-            try (XSSFWorkbook wb = new XSSFWorkbook(); Connection c = DriverManager.getConnection(DB, U, P)) {
+            try (XSSFWorkbook wb = new XSSFWorkbook()) {
+                Connection c = getConn();
                 XSSFCellStyle hs = wb.createCellStyle();
                 XSSFFont hf = wb.createFont();
                 hf.setBold(true);
@@ -894,7 +914,8 @@ public class MyApotekApp extends JFrame {
             fc.setSelectedFile(new File("Laporan_PBF.xlsx"));
             if (fc.showSaveDialog(this) != JFileChooser.APPROVE_OPTION)
                 return;
-            try (XSSFWorkbook wb = new XSSFWorkbook(); Connection c = DriverManager.getConnection(DB, U, P)) {
+            try (XSSFWorkbook wb = new XSSFWorkbook()) {
+                Connection c = getConn();
                 XSSFCellStyle hs = wb.createCellStyle();
                 XSSFFont hf = wb.createFont();
                 hf.setBold(true);
@@ -950,12 +971,14 @@ public class MyApotekApp extends JFrame {
             doc.open();
             doc.add(new Paragraph("LAPORAN APOTEK - " + LocalDate.now()));
             doc.add(new Paragraph(" "));
-            try (Connection c = DriverManager.getConnection(DB, U, P)) {
+            try {
+                Connection c = getConn();
                 ResultSet rs = c.createStatement().executeQuery("SELECT * FROM riwayat_barang ORDER BY timestamp DESC");
                 while (rs.next())
                     doc.add(new Paragraph(rs.getTimestamp("timestamp") + " | " + rs.getString("tipe") + " | "
                             + rs.getString("nama_obat") + " | Qty: " + rs.getInt("quantity") + " | PBF: "
                             + rs.getString("nama_pbf")));
+            } catch (Exception ignored) {
             }
             doc.close();
             showSuccess(this, "PDF berhasil disimpan!");
@@ -965,7 +988,9 @@ public class MyApotekApp extends JFrame {
     }
 
     private void ensureTableExists() {
-        try (Connection c = DriverManager.getConnection(DB, U, P); Statement s = c.createStatement()) {
+        if (tablesReady)
+            return;
+        try (Statement s = getConn().createStatement()) {
             s.execute(
                     "CREATE TABLE IF NOT EXISTS obat (id BIGINT AUTO_INCREMENT PRIMARY KEY, nama_obat VARCHAR(255), nomor_batch VARCHAR(255), tgl_produksi DATE, tgl_expired DATE, supplier VARCHAR(255), no_faktur VARCHAR(255) UNIQUE, satuan VARCHAR(100), nama_pbf VARCHAR(255), harga_beli DOUBLE, harga_jual_apotek DOUBLE, harga_plot DOUBLE, harga_beli_ppn DOUBLE, quantity INT, golongan VARCHAR(100), indikasi VARCHAR(1000))");
             s.execute(
@@ -1005,6 +1030,7 @@ public class MyApotekApp extends JFrame {
                 s.execute(
                         "INSERT INTO users(username, password, role, nama_lengkap) VALUES('kepala', 'kepala123', 'KEPALA_APOTEK', 'Kepala Apotek')");
             }
+            tablesReady = true;
         } catch (Exception e) {
             System.err.println("DB: " + e.getMessage());
         }
@@ -1082,7 +1108,8 @@ public class MyApotekApp extends JFrame {
             String user = userField.getText().trim();
             String pass = new String(passField.getPassword());
 
-            try (Connection c = DriverManager.getConnection(DB, U, P)) {
+            try {
+                Connection c = getConn();
                 ResultSet rs = c.createStatement().executeQuery(
                         "SELECT * FROM users WHERE username = '" + user.replace("'", "''") +
                                 "' AND password = '" + pass.replace("'", "''") + "'");
