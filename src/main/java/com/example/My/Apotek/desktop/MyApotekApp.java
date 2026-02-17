@@ -146,9 +146,39 @@ public class MyApotekApp extends JFrame {
         userInfo.add(Box.createVerticalStrut(2));
         userInfo.add(uRole);
 
+        JButton btnLogout = new JButton("Logout");
+        btnLogout.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        btnLogout.setForeground(Color.WHITE);
+        btnLogout.setBackground(DANGER);
+        btnLogout.setBorder(BorderFactory.createEmptyBorder(8, 20, 8, 20));
+        btnLogout.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        btnLogout.setFocusPainted(false);
+        btnLogout.setAlignmentX(Component.LEFT_ALIGNMENT);
+        btnLogout.setMaximumSize(new Dimension(220, 36));
+        btnLogout.addActionListener(e -> {
+            int confirm = JOptionPane.showConfirmDialog(this,
+                    "Apakah Anda yakin ingin logout?",
+                    "Konfirmasi Logout", JOptionPane.YES_NO_OPTION);
+            if (confirm == JOptionPane.YES_OPTION) {
+                dispose();
+                userRole = null;
+                userName = null;
+                MyApotekApp newApp = new MyApotekApp();
+                if (!newApp.showLoginDialog()) {
+                    System.exit(0);
+                    return;
+                }
+                newApp.setVisible(true);
+            }
+        });
+
         JPanel south = new JPanel(new BorderLayout());
         south.setBackground(SIDEBAR_BG);
         south.add(userInfo, BorderLayout.NORTH);
+        JPanel logoutWrap = new JPanel(new FlowLayout(FlowLayout.CENTER));
+        logoutWrap.setBackground(SIDEBAR_BG);
+        logoutWrap.add(btnLogout);
+        south.add(logoutWrap, BorderLayout.CENTER);
         south.add(ver, BorderLayout.SOUTH);
         menuWrapper.add(south, BorderLayout.SOUTH);
 

@@ -8,14 +8,15 @@ Write-Host "1. Building Project..." -ForegroundColor Cyan
 .\mvnw.cmd clean package -DskipTests
 
 Write-Host "2. Preparing Staging Area..." -ForegroundColor Cyan
-if (Test-Path "staging") { Remove-Item "staging" -Recurse -Force }
+if (Test-Path "staging") { cmd /c "rmdir /s /q staging" }
 New-Item -ItemType Directory -Force -Path "staging" | Out-Null
 New-Item -ItemType Directory -Force -Path "staging/lib" | Out-Null
 
 Copy-Item "target/My-Apotek-0.0.1-SNAPSHOT.jar" -Destination "staging/"
 Copy-Item "target/lib/*.jar" -Destination "staging/lib/"
 
-if (Test-Path $DIST_DIR) { Remove-Item $DIST_DIR -Recurse -Force }
+if (Test-Path $DIST_DIR) { cmd /c "rmdir /s /q $DIST_DIR" }
+Start-Sleep -Seconds 2
 New-Item -ItemType Directory -Force -Path $DIST_DIR | Out-Null
 
 Write-Host "3. Packaging Application (Portable EXE)..." -ForegroundColor Cyan
