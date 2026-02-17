@@ -129,6 +129,34 @@
           <div
             class="card"
             style="
+              background: #fffbeb;
+              border: 2px solid #fde68a;
+              margin-top: 1rem;
+            "
+          >
+            <h4
+              style="color: #92400e; margin-bottom: 0.8rem; font-size: 0.95rem"
+            >
+              <i class="fa-solid fa-percent"></i> Diskon Penjualan
+            </h4>
+            <div class="form-group" style="margin-bottom: 0">
+              <label>Diskon (%)</label>
+              <input
+                type="number"
+                name="diskonPersen"
+                id="diskonPersen"
+                value="0"
+                min="0"
+                max="100"
+                step="0.01"
+                oninput="calcGrandTotal()"
+              />
+            </div>
+          </div>
+
+          <div
+            class="card"
+            style="
               background: #1e293b;
               color: white;
               text-align: center;
@@ -143,13 +171,48 @@
                 color: rgba(255, 255, 255, 0.6);
               "
             >
-              Grand Total
+              Subtotal
             </div>
             <div
-              id="grandTotal"
-              style="font-size: 2.5rem; font-weight: 900; margin-top: 0.5rem"
+              id="subtotalDisplay"
+              style="font-size: 1.5rem; font-weight: 700; margin-top: 0.3rem"
             >
               Rp 0
+            </div>
+            <div
+              id="diskonDisplay"
+              style="
+                font-size: 0.9rem;
+                color: #fbbf24;
+                margin-top: 0.3rem;
+                display: none;
+              "
+            >
+              Diskon: -Rp 0
+            </div>
+            <div
+              style="
+                border-top: 1px solid rgba(255, 255, 255, 0.2);
+                margin-top: 0.8rem;
+                padding-top: 0.8rem;
+              "
+            >
+              <div
+                style="
+                  font-size: 0.85rem;
+                  letter-spacing: 1px;
+                  text-transform: uppercase;
+                  color: rgba(255, 255, 255, 0.6);
+                "
+              >
+                Grand Total
+              </div>
+              <div
+                id="grandTotal"
+                style="font-size: 2.5rem; font-weight: 900; margin-top: 0.5rem"
+              >
+                Rp 0
+              </div>
             </div>
           </div>
 
@@ -167,7 +230,7 @@
           </button>
         </form>
       </div>
-<div class="card">
+      <div class="card">
         <h3 style="margin-bottom: 1.5rem">
           <i class="fa-solid fa-clock-rotate-left"></i> Riwayat Penjualan
         </h3>
@@ -179,6 +242,8 @@
                 <th>Tanggal</th>
                 <th>Pembeli</th>
                 <th>Total</th>
+                <th>Diskon</th>
+                <th>Total Akhir</th>
               </tr>
             </thead>
             <tbody>
@@ -197,10 +262,21 @@
                 >
                   -
                 </td>
+                <td
+                  th:text="${p.diskonPersen != null && p.diskonPersen > 0 ? p.diskonPersen + '%' : '-'}"
+                >
+                  -
+                </td>
+                <td
+                  style="font-weight: 800; color: var(--success)"
+                  th:text="${p.totalSetelahDiskon != null ? 'Rp ' + #numbers.formatDecimal(p.totalSetelahDiskon, 0, 'COMMA', 0, 'POINT') : (p.totalHarga != null ? 'Rp ' + #numbers.formatDecimal(p.totalHarga, 0, 'COMMA', 0, 'POINT') : 'Rp 0')}"
+                >
+                  -
+                </td>
               </tr>
               <tr th:if="${penjualanList == null || penjualanList.isEmpty()}">
                 <td
-                  colspan="4"
+                  colspan="6"
                   style="
                     text-align: center;
                     color: var(--text-muted);
@@ -256,17 +332,34 @@
 
         function calcGrandTotal() {
           var rows = document.querySelectorAll(".item-row");
-          var total = 0;
+          var subtotal = 0;
           rows.forEach(function (row) {
             var sel = row.querySelector(".obat-select");
             var selected = sel.options[sel.selectedIndex];
             var harga = parseFloat(selected.getAttribute("data-harga")) || 0;
             var qty =
               parseInt(row.querySelector('input[name="jumlah"]').value) || 1;
-            total += harga * qty;
+            subtotal += harga * qty;
           });
+          var diskonPersen =
+            parseFloat(document.getElementById("diskonPersen").value) || 0;
+          var diskonNominal = subtotal * (diskonPersen / 100);
+          var grandTotal = subtotal - diskonNominal;
+          document.getElementById("subtotalDisplay").textContent =
+            "Rp " + subtotal.toLocaleString("id-ID");
+          var diskonEl = document.getElementById("diskonDisplay");
+          if (diskonPersen > 0) {
+            diskonEl.style.display = "block";
+            diskonEl.textContent =
+              "Diskon " +
+              diskonPersen +
+              "%: -Rp " +
+              diskonNominal.toLocaleString("id-ID");
+          } else {
+            diskonEl.style.display = "none";
+          }
           document.getElementById("grandTotal").textContent =
-            "Rp " + total.toLocaleString("id-ID");
+            "Rp " + grandTotal.toLocaleString("id-ID");
         }
       </script>
     </div>

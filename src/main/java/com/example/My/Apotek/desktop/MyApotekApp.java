@@ -20,6 +20,8 @@ public class MyApotekApp extends JFrame {
     private static final String U = "sa", P = "";
     private JPanel contentPanel;
     private CardLayout cardLayout;
+    private String userRole = "ADMIN_APOTEK";
+    private String userName = "Admin Apotek";
 
     public MyApotekApp() {
         setTitle("My Apotek Professional");
@@ -123,11 +125,32 @@ public class MyApotekApp extends JFrame {
         menuWrapper.setBackground(SIDEBAR_BG);
         menuWrapper.add(menu, BorderLayout.NORTH);
 
-        JLabel ver = new JLabel("v2.1 Pro  \u00A9 2026", SwingConstants.CENTER);
+        JLabel ver = new JLabel("v3.0 Pro  \u00A9 2026", SwingConstants.CENTER);
         ver.setFont(new Font("Segoe UI", Font.PLAIN, 11));
         ver.setForeground(new Color(51, 65, 85));
         ver.setPreferredSize(new Dimension(260, 40));
-        menuWrapper.add(ver, BorderLayout.SOUTH);
+
+        JPanel userInfo = new JPanel();
+        userInfo.setBackground(SIDEBAR_BG);
+        userInfo.setLayout(new BoxLayout(userInfo, BoxLayout.Y_AXIS));
+        userInfo.setBorder(BorderFactory.createEmptyBorder(8, 20, 8, 20));
+        JLabel uName = new JLabel(userName);
+        uName.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        uName.setForeground(Color.WHITE);
+        uName.setAlignmentX(Component.LEFT_ALIGNMENT);
+        JLabel uRole = new JLabel(userRole.replace("_", " "));
+        uRole.setFont(new Font("Segoe UI", Font.PLAIN, 11));
+        uRole.setForeground(userRole.equals("KEPALA_APOTEK") ? new Color(16, 185, 129) : PRIMARY);
+        uRole.setAlignmentX(Component.LEFT_ALIGNMENT);
+        userInfo.add(uName);
+        userInfo.add(Box.createVerticalStrut(2));
+        userInfo.add(uRole);
+
+        JPanel south = new JPanel(new BorderLayout());
+        south.setBackground(SIDEBAR_BG);
+        south.add(userInfo, BorderLayout.NORTH);
+        south.add(ver, BorderLayout.SOUTH);
+        menuWrapper.add(south, BorderLayout.SOUTH);
 
         sb.add(menuWrapper, BorderLayout.CENTER);
         return sb;
@@ -150,16 +173,12 @@ public class MyApotekApp extends JFrame {
         header.setForeground(TEXT);
 
         JPanel formCard = card("Input Obat Baru");
-        JPanel formGrid = new JPanel(new GridLayout(7, 2, 12, 8));
+        JPanel formGrid = new JPanel(new GridLayout(10, 2, 12, 8));
         formGrid.setOpaque(false);
         String[] labels = { "Nama Obat", "Qty", "No Faktur", "Harga Beli", "Batch", "H.Beli+PPN 11%", "PBF",
-                "H.Jual Apotek", "Supplier", "H.Plot", "Satuan", "Indikasi", "Golongan", "" };
-        JTextField[] f = new JTextField[labels.length];
+                "H.Jual Apotek", "Supplier", "H.Plot", "Satuan", "Indikasi" };
+        JTextField[] f = new JTextField[20];
         for (int i = 0; i < labels.length; i++) {
-            if (labels[i].isEmpty()) {
-                formGrid.add(new JLabel());
-                continue;
-            }
             f[i] = styledField(labels[i]);
             if (i == 5) {
                 f[i].setEditable(false);
@@ -176,6 +195,30 @@ public class MyApotekApp extends JFrame {
                 }
             }
         });
+
+        JComboBox<String> cbGolongan = new JComboBox<>(new String[] {
+                "Obat Bebas", "Obat Bebas Terbatas (Daftar W)", "Obat Keras (Daftar G)", "Obat Narkotika",
+                "Obat Psikotropika", "Obat Herbal", "Fitofarmaka", "Jamu", "Obat KB", "Obat Anti Serangga",
+                "Makanan", "Makanan Khusus Bayi/Balita", "Food Suplemen", "Kelompok Minuman", "OOT",
+                "Cosmetic/Alat Kecantikan", "Konsinyasi", "Alat Kesehatan", "Diagnostic Test/Laborat",
+                "Obat-Obatan Tertentu", "Antiseptik", "Alat KB", "Listrik", "Perlengkapan Bayi",
+                "Optik", "Prekursor", "Susu", "Pembalut", "Tissu", "Pewangi", "Suplemen", "Lain-Lain" });
+        formGrid.add(formRow("Golongan:", cbGolongan));
+
+        f[13] = styledField("0");
+        formGrid.add(formRow("Diskon (%):", f[13]));
+
+        JComboBox<String> cbPembayaran = new JComboBox<>(new String[] { "CASH", "TEMPO", "KONSINYASI" });
+        formGrid.add(formRow("M.Pembayaran:", cbPembayaran));
+
+        f[15] = styledField("Hari");
+        formGrid.add(formRow("Jatuh Tempo:", f[15]));
+
+        JComboBox<String> cbFaktur = new JComboBox<>(new String[] { "NON_KONSINYASI", "KONSINYASI" });
+        formGrid.add(formRow("Jenis Faktur:", cbFaktur));
+
+        formGrid.add(new JLabel());
+
         formCard.add(formGrid, BorderLayout.CENTER);
 
         JButton btnAdd = styledBtn("Tambah Obat", PRIMARY);
@@ -204,7 +247,7 @@ public class MyApotekApp extends JFrame {
                 ps.setString(4, f[6].getText());
                 ps.setString(5, f[8].getText());
                 ps.setString(6, f[10].getText());
-                ps.setString(7, f[12].getText());
+                ps.setString(7, (String) cbGolongan.getSelectedItem());
                 ps.setInt(8, qty);
                 ps.setDouble(9, hb);
                 ps.setDouble(10, ppn);
@@ -376,7 +419,7 @@ public class MyApotekApp extends JFrame {
         JTextField tfF = styledField("No Faktur"), tfS = styledField("Stok Fisik");
         tfF.setPreferredSize(new Dimension(200, 40));
         tfS.setPreferredSize(new Dimension(120, 40));
-        JButton btnC = styledBtn("\uD83D\uDD0D Cek Stok", PRIMARY), btnA = styledBtn("\uD83D\uDD04 Sesuaikan", WARNING);
+        JButton btnC = styledBtn("Cek Stok", PRIMARY), btnA = styledBtn("Sesuaikan", WARNING);
         row.add(tfF);
         row.add(tfS);
         row.add(btnC);
@@ -430,6 +473,12 @@ public class MyApotekApp extends JFrame {
         });
 
         btnA.addActionListener(e -> {
+            if (userRole.equals("ADMIN_APOTEK")) {
+                JOptionPane.showMessageDialog(p,
+                        "Hanya Kepala Apotek yang dapat melakukan Approval Penyesuaian Stok!",
+                        "Akses Ditolak", JOptionPane.WARNING_MESSAGE);
+                return;
+            }
             try (Connection c = DriverManager.getConnection(DB, U, P)) {
                 int fisik = Integer.parseInt(tfS.getText());
                 ResultSet rs = c.createStatement().executeQuery(
@@ -496,10 +545,10 @@ public class MyApotekApp extends JFrame {
         JTextField tfDate = styledField("YYYY-MM-DD");
         tfDate.setText(LocalDate.now().toString());
         tfDate.setPreferredSize(new Dimension(140, 40));
-        JButton b1 = styledBtn("\uD83D\uDCC8 Omset Harian", PRIMARY),
-                b2 = styledBtn("\uD83D\uDCE5 Excel Omset", SUCCESS),
-                b3 = styledBtn("\uD83D\uDCE5 Excel PBF", new Color(99, 102, 241)),
-                b4 = styledBtn("\uD83D\uDCC4 PDF Report", DANGER);
+        JButton b1 = styledBtn("Omset Harian", PRIMARY),
+                b2 = styledBtn("Excel Omset", SUCCESS),
+                b3 = styledBtn("Excel PBF", new Color(99, 102, 241)),
+                b4 = styledBtn("PDF Report", DANGER);
         row.add(tfDate);
         row.add(b1);
         row.add(b2);
@@ -578,7 +627,7 @@ public class MyApotekApp extends JFrame {
         tfB.setPreferredSize(new Dimension(200, 40));
         tfO.setPreferredSize(new Dimension(200, 40));
         tfQ.setPreferredSize(new Dimension(80, 40));
-        JButton btnA = styledBtn("\u2795 Tambah", PRIMARY), btnP = styledBtn("\u2705 Proses", SUCCESS);
+        JButton btnA = styledBtn("Tambah", PRIMARY), btnP = styledBtn("Proses", SUCCESS);
         JLabel lblT = new JLabel("Total: Rp 0");
         lblT.setFont(new Font("Segoe UI", Font.BOLD, 18));
         lblT.setForeground(PRIMARY);
@@ -592,7 +641,16 @@ public class MyApotekApp extends JFrame {
 
         DefaultTableModel cart = new DefaultTableModel(new String[] { "Obat", "Qty", "Harga", "Subtotal" }, 0);
         JTable cartT = new JTable(cart);
-        DefaultTableModel hist = new DefaultTableModel(new String[] { "No Transaksi", "Tanggal", "Pembeli", "Total" },
+
+        JTextField tfDsk = styledField("0");
+        tfDsk.setPreferredSize(new Dimension(60, 40));
+        JLabel lblDsk = new JLabel("  Diskon (%): ");
+        lblDsk.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        row.add(lblDsk);
+        row.add(tfDsk);
+
+        DefaultTableModel hist = new DefaultTableModel(
+                new String[] { "No Transaksi", "Tanggal", "Pembeli", "Total", "Diskon", "Total Akhir" },
                 0);
         JTable histT = new JTable(hist);
 
@@ -634,13 +692,23 @@ public class MyApotekApp extends JFrame {
                             + " WHERE nama_obat = '" + nama.replace("'", "''") + "'");
                 }
                 PreparedStatement ps = c.prepareStatement(
-                        "INSERT INTO penjualan(no_transaksi,tanggal,nama_pembeli,total_harga) VALUES(?,?,?,?)");
+                        "INSERT INTO penjualan(no_transaksi,tanggal,nama_pembeli,total_harga,diskon_persen,diskon_nominal,total_setelah_diskon) VALUES(?,?,?,?,?,?,?)");
                 ps.setString(1, noTrx);
                 ps.setTimestamp(2, Timestamp.valueOf(LocalDateTime.now()));
                 ps.setString(3, tfB.getText());
                 ps.setDouble(4, gt);
+                double dskPct = 0;
+                try {
+                    dskPct = Double.parseDouble(tfDsk.getText());
+                } catch (Exception ignored) {
+                }
+                double dskNom = gt * (dskPct / 100);
+                double gtFinal = gt - dskNom;
+                ps.setDouble(5, dskPct);
+                ps.setDouble(6, dskNom);
+                ps.setDouble(7, gtFinal);
                 ps.executeUpdate();
-                showSuccess(p, "Penjualan berhasil! " + noTrx + " | Rp " + fmt(gt));
+                showSuccess(p, "Penjualan berhasil! " + noTrx + " | Rp " + fmt(gtFinal));
                 cart.setRowCount(0);
                 lblT.setText("Total: Rp 0");
                 tfB.setText("");
@@ -667,9 +735,21 @@ public class MyApotekApp extends JFrame {
         m.setRowCount(0);
         try (Connection c = DriverManager.getConnection(DB, U, P);
                 ResultSet rs = c.createStatement().executeQuery("SELECT * FROM penjualan ORDER BY tanggal DESC")) {
-            while (rs.next())
+            while (rs.next()) {
+                double totalH = rs.getDouble("total_harga");
+                double dskP = 0, totalA = totalH;
+                try {
+                    dskP = rs.getDouble("diskon_persen");
+                } catch (Exception ignored) {
+                }
+                try {
+                    totalA = rs.getDouble("total_setelah_diskon");
+                } catch (Exception ignored) {
+                }
                 m.addRow(new Object[] { rs.getString("no_transaksi"), rs.getTimestamp("tanggal"),
-                        rs.getString("nama_pembeli"), "Rp " + fmt(rs.getDouble("total_harga")) });
+                        rs.getString("nama_pembeli"), "Rp " + fmt(totalH),
+                        dskP > 0 ? dskP + "%" : "-", "Rp " + fmt(totalA) });
+            }
         } catch (Exception ignored) {
         }
     }
@@ -687,7 +767,7 @@ public class MyApotekApp extends JFrame {
         row.setOpaque(false);
         JTextField tfS = styledField("Cari obat...");
         tfS.setPreferredSize(new Dimension(350, 40));
-        JButton btnS = styledBtn("\uD83D\uDD0D Cari", PRIMARY);
+        JButton btnS = styledBtn("Cari", PRIMARY);
         row.add(tfS);
         row.add(btnS);
         searchCard.add(row, BorderLayout.CENTER);
@@ -865,9 +945,11 @@ public class MyApotekApp extends JFrame {
             s.execute(
                     "CREATE TABLE IF NOT EXISTS stok_opname (id BIGINT AUTO_INCREMENT PRIMARY KEY, nama_obat VARCHAR(255), no_faktur VARCHAR(255), stok_sistem INT, stok_fisik INT, selisih INT, status VARCHAR(50), tanggal TIMESTAMP)");
             s.execute(
-                    "CREATE TABLE IF NOT EXISTS penjualan (id BIGINT AUTO_INCREMENT PRIMARY KEY, no_transaksi VARCHAR(100) UNIQUE, tanggal TIMESTAMP, nama_pembeli VARCHAR(255), total_harga DOUBLE)");
+                    "CREATE TABLE IF NOT EXISTS penjualan (id BIGINT AUTO_INCREMENT PRIMARY KEY, no_transaksi VARCHAR(100) UNIQUE, tanggal TIMESTAMP, nama_pembeli VARCHAR(255), total_harga DOUBLE, diskon_persen DOUBLE, diskon_nominal DOUBLE, total_setelah_diskon DOUBLE)");
             s.execute(
                     "CREATE TABLE IF NOT EXISTS detail_penjualan (id BIGINT AUTO_INCREMENT PRIMARY KEY, penjualan_id BIGINT, nama_obat VARCHAR(255), harga_jual DOUBLE, jumlah INT, subtotal DOUBLE)");
+            s.execute(
+                    "CREATE TABLE IF NOT EXISTS users (id BIGINT AUTO_INCREMENT PRIMARY KEY, username VARCHAR(255) UNIQUE, password VARCHAR(255), role VARCHAR(50), nama_lengkap VARCHAR(255))");
             String[][] alts = { { "obat", "no_faktur VARCHAR(255)" }, { "obat", "satuan VARCHAR(100)" },
                     { "obat", "nama_pbf VARCHAR(255)" }, { "obat", "harga_jual_apotek DOUBLE" },
                     { "obat", "harga_plot DOUBLE" }, { "obat", "harga_beli_ppn DOUBLE" },
@@ -877,12 +959,22 @@ public class MyApotekApp extends JFrame {
                     { "riwayat_klinis", "no_praktek VARCHAR(100)" },
                     { "riwayat_klinis", "nama_rumah_sakit VARCHAR(255)" }, { "riwayat_klinis", "harga_obat DOUBLE" },
                     { "riwayat_klinis", "jumlah_obat INT" }, { "riwayat_klinis", "tuslah DOUBLE" },
-                    { "riwayat_klinis", "embalase DOUBLE" }, { "riwayat_klinis", "total_harga DOUBLE" } };
+                    { "riwayat_klinis", "embalase DOUBLE" }, { "riwayat_klinis", "total_harga DOUBLE" },
+                    { "penjualan", "diskon_persen DOUBLE" }, { "penjualan", "diskon_nominal DOUBLE" },
+                    { "penjualan", "total_setelah_diskon DOUBLE" } };
             for (String[] a : alts)
                 try {
                     s.execute("ALTER TABLE " + a[0] + " ADD COLUMN IF NOT EXISTS " + a[1]);
                 } catch (Exception ignored) {
                 }
+            ResultSet rs = s.executeQuery("SELECT COUNT(*) FROM users");
+            rs.next();
+            if (rs.getInt(1) == 0) {
+                s.execute(
+                        "INSERT INTO users(username, password, role, nama_lengkap) VALUES('admin', 'admin123', 'ADMIN_APOTEK', 'Admin Apotek')");
+                s.execute(
+                        "INSERT INTO users(username, password, role, nama_lengkap) VALUES('kepala', 'kepala123', 'KEPALA_APOTEK', 'Kepala Apotek')");
+            }
         } catch (Exception e) {
             System.err.println("DB: " + e.getMessage());
         }
@@ -931,6 +1023,60 @@ public class MyApotekApp extends JFrame {
         UIManager.put("ScrollBar.width", 10);
         UIManager.put("ScrollBar.trackArc", 999);
         UIManager.put("ScrollBar.thumbArc", 999);
-        SwingUtilities.invokeLater(() -> new MyApotekApp().setVisible(true));
+        SwingUtilities.invokeLater(() -> {
+            MyApotekApp app = new MyApotekApp();
+            if (!app.showLoginDialog()) {
+                System.exit(0);
+                return;
+            }
+            app.setVisible(true);
+        });
+    }
+
+    boolean showLoginDialog() {
+        JPanel panel = new JPanel(new GridLayout(2, 2, 8, 8));
+        JTextField userField = new JTextField();
+        JPasswordField passField = new JPasswordField();
+        panel.add(new JLabel("Username:"));
+        panel.add(userField);
+        panel.add(new JLabel("Password:"));
+        panel.add(passField);
+
+        while (true) {
+            int result = JOptionPane.showConfirmDialog(null, panel,
+                    "Login - My Apotek Professional",
+                    JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+            if (result != JOptionPane.OK_OPTION)
+                return false;
+
+            String user = userField.getText().trim();
+            String pass = new String(passField.getPassword());
+
+            try (Connection c = DriverManager.getConnection(DB, U, P)) {
+                ResultSet rs = c.createStatement().executeQuery(
+                        "SELECT * FROM users WHERE username = '" + user.replace("'", "''") +
+                                "' AND password = '" + pass.replace("'", "''") + "'");
+                if (rs.next()) {
+                    userRole = rs.getString("role");
+                    userName = rs.getString("nama_lengkap");
+                    return true;
+                }
+            } catch (Exception ex) {
+                if (user.equals("admin") && pass.equals("admin123")) {
+                    userRole = "ADMIN_APOTEK";
+                    userName = "Admin Apotek";
+                    return true;
+                }
+                if (user.equals("kepala") && pass.equals("kepala123")) {
+                    userRole = "KEPALA_APOTEK";
+                    userName = "Kepala Apotek";
+                    return true;
+                }
+            }
+            JOptionPane.showMessageDialog(null, "Username atau password salah!",
+                    "Login Gagal", JOptionPane.ERROR_MESSAGE);
+            userField.setText("");
+            passField.setText("");
+        }
     }
 }

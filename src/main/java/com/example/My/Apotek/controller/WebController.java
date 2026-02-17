@@ -11,8 +11,6 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.io.IOException;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 
 @Controller
@@ -181,13 +179,17 @@ public class WebController {
             @RequestParam("namaPembeli") String namaPembeli,
             @RequestParam("namaObat") List<String> namaObatList,
             @RequestParam("jumlah") List<Integer> jumlahList,
+            @RequestParam(value = "diskonPersen", required = false) Double diskonPersen,
             RedirectAttributes redirect) {
 
-        Penjualan result = apotekService.createPenjualan(namaPembeli, namaObatList, jumlahList);
+        Penjualan result = apotekService.createPenjualan(namaPembeli, namaObatList, jumlahList, diskonPersen);
         if (result != null && result.getId() != null) {
+            String totalDisplay = result.getTotalSetelahDiskon() != null
+                    ? String.format("%,.0f", result.getTotalSetelahDiskon())
+                    : String.format("%,.0f", result.getTotalHarga());
             redirect.addFlashAttribute("success",
                     "Penjualan berhasil! No Transaksi: " + result.getNoTransaksi() +
-                            " | Total: Rp " + String.format("%,.0f", result.getTotalHarga()));
+                            " | Total: Rp " + totalDisplay);
         } else {
             redirect.addFlashAttribute("error", "Gagal memproses penjualan. Periksa stok!");
         }

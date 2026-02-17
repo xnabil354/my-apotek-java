@@ -25,6 +25,15 @@ public class Penjualan {
     @Column(name = "total_harga")
     private Double totalHarga;
 
+    @Column(name = "diskon_persen")
+    private Double diskonPersen;
+
+    @Column(name = "diskon_nominal")
+    private Double diskonNominal;
+
+    @Column(name = "total_setelah_diskon")
+    private Double totalSetelahDiskon;
+
     @OneToMany(mappedBy = "penjualan", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<DetailPenjualan> items = new ArrayList<>();
 

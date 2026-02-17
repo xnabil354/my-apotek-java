@@ -31,3 +31,9 @@ build/
 
 ### VS Code ###
 .vscode/
+
+
+### build package
+dist_v*/
+staging/
+data/

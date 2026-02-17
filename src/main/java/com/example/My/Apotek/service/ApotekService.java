@@ -200,7 +200,8 @@ public class ApotekService {
     }
 
     @Transactional
-    public Penjualan createPenjualan(String namaPembeli, List<String> namaObatList, List<Integer> jumlahList) {
+    public Penjualan createPenjualan(String namaPembeli, List<String> namaObatList, List<Integer> jumlahList,
+            Double diskonPersen) {
         Penjualan penjualan = new Penjualan();
         penjualan.setNamaPembeli(namaPembeli);
 
@@ -240,6 +241,18 @@ public class ApotekService {
         }
 
         penjualan.setTotalHarga(total);
+
+        if (diskonPersen != null && diskonPersen > 0) {
+            penjualan.setDiskonPersen(diskonPersen);
+            double diskonNominal = total * (diskonPersen / 100);
+            penjualan.setDiskonNominal(diskonNominal);
+            penjualan.setTotalSetelahDiskon(total - diskonNominal);
+        } else {
+            penjualan.setDiskonPersen(0.0);
+            penjualan.setDiskonNominal(0.0);
+            penjualan.setTotalSetelahDiskon(total);
+        }
+
         return penjualanRepository.save(penjualan);
     }
 

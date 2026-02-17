@@ -32,7 +32,7 @@
           <i class="fa-solid fa-circle-xmark"></i>
           <span th:text="${error}"></span>
         </div>
-<form
+        <form
           th:action="@{/inventory/add}"
           th:object="${newObat}"
           method="post"
@@ -105,12 +105,49 @@
               <select th:field="*{golongan}">
                 <option value="">-- Pilih Golongan --</option>
                 <option value="Obat Bebas">Obat Bebas</option>
-                <option value="Obat Bebas Terbatas">Obat Bebas Terbatas</option>
-                <option value="Obat Keras">Obat Keras</option>
+                <option value="Obat Bebas Terbatas (Daftar W)">
+                  Obat Bebas Terbatas (Daftar W)
+                </option>
+                <option value="Obat Keras (Daftar G)">
+                  Obat Keras (Daftar G)
+                </option>
                 <option value="Obat Narkotika">Obat Narkotika</option>
                 <option value="Obat Psikotropika">Obat Psikotropika</option>
                 <option value="Obat Herbal">Obat Herbal</option>
+                <option value="Fitofarmaka">Fitofarmaka</option>
+                <option value="Jamu">Jamu</option>
+                <option value="Obat KB">Obat KB</option>
+                <option value="Obat Anti Serangga">Obat Anti Serangga</option>
+                <option value="Makanan">Makanan</option>
+                <option value="Makanan Khusus Bayi/Balita">
+                  Makanan Khusus Bayi/Balita
+                </option>
+                <option value="Food Suplemen">Food Suplemen</option>
+                <option value="Kelompok Minuman">Kelompok Minuman</option>
+                <option value="OOT">OOT</option>
+                <option value="Cosmetic/Alat Kecantikan">
+                  Cosmetic/Alat Kecantikan
+                </option>
+                <option value="Konsinyasi">Konsinyasi</option>
+                <option value="Alat Kesehatan">Alat Kesehatan</option>
+                <option value="Diagnostic Test/Laborat">
+                  Diagnostic Test/Laborat
+                </option>
+                <option value="Obat-Obatan Tertentu">
+                  Obat-Obatan Tertentu
+                </option>
+                <option value="Antiseptik">Antiseptik</option>
+                <option value="Alat KB">Alat KB</option>
+                <option value="Listrik">Listrik</option>
+                <option value="Perlengkapan Bayi">Perlengkapan Bayi</option>
+                <option value="Optik">Optik</option>
+                <option value="Prekursor">Prekursor</option>
+                <option value="Susu">Susu</option>
+                <option value="Pembalut">Pembalut</option>
+                <option value="Tissu">Tissu</option>
+                <option value="Pewangi">Pewangi</option>
                 <option value="Suplemen">Suplemen</option>
+                <option value="Lain-Lain">Lain-Lain</option>
               </select>
             </div>
             <div class="form-group">
@@ -123,8 +160,56 @@
                 min="1"
               />
             </div>
+            <div class="form-group">
+              <label><i class="fa-solid fa-percent"></i> Diskon (%)</label>
+              <input
+                type="number"
+                th:field="*{diskonPersen}"
+                placeholder="0"
+                step="0.01"
+                min="0"
+                max="100"
+              />
+            </div>
+            <div class="form-group">
+              <label
+                ><i class="fa-solid fa-credit-card"></i> Metode
+                Pembayaran</label
+              >
+              <select
+                th:field="*{metodePembayaran}"
+                id="metodePembayaran"
+                onchange="toggleTempo()"
+              >
+                <option value="">-- Pilih --</option>
+                <option value="CASH">Cash</option>
+                <option value="TEMPO">Tempo / Kredit</option>
+              </select>
+            </div>
+            <div class="form-group" id="tempoGroup" style="display: none">
+              <label
+                ><i class="fa-solid fa-calendar-days"></i> Jatuh Tempo
+                (Hari)</label
+              >
+              <input
+                type="number"
+                th:field="*{jatuhTempo}"
+                placeholder="Jumlah hari..."
+                min="1"
+              />
+            </div>
+            <div class="form-group">
+              <label
+                ><i class="fa-solid fa-file-invoice"></i> Jenis Faktur</label
+              >
+              <select th:field="*{jenisFaktur}">
+                <option value="">-- Pilih --</option>
+                <option value="KONSINYASI">Konsinyasi</option>
+                <option value="NON_KONSINYASI">Non-Konsinyasi</option>
+              </select>
+            </div>
           </div>
-<div
+          <div
             class="card"
             style="
               background: #f0fdf4;
@@ -178,7 +263,7 @@
               </div>
             </div>
           </div>
-<div class="form-group" style="margin-top: 1rem">
+          <div class="form-group" style="margin-top: 1rem">
             <label
               ><i class="fa-solid fa-book-medical"></i> Indikasi / Kegunaan
               (MIMS)</label
@@ -199,7 +284,7 @@
           </button>
         </form>
       </div>
-<div class="card">
+      <div class="card">
         <h3 style="margin-bottom: 1.5rem">
           <i class="fa-solid fa-list"></i> Daftar Obat
         </h3>
@@ -218,6 +303,9 @@
                 <th>H. Beli+PPN</th>
                 <th>H. Jual</th>
                 <th>H. Plot</th>
+                <th>Diskon</th>
+                <th>Pembayaran</th>
+                <th>Faktur</th>
                 <th>Expired</th>
                 <th>Status</th>
               </tr>
@@ -262,6 +350,21 @@
                 >
                   -
                 </td>
+                <td
+                  th:text="${obat.diskonPersen != null ? obat.diskonPersen + '%' : '-'}"
+                >
+                  -
+                </td>
+                <td
+                  th:text="${obat.metodePembayaran != null ? obat.metodePembayaran : '-'}"
+                >
+                  -
+                </td>
+                <td
+                  th:text="${obat.jenisFaktur != null ? obat.jenisFaktur : '-'}"
+                >
+                  -
+                </td>
                 <td th:text="${obat.tglExpired}">-</td>
                 <td>
                   <span
@@ -280,7 +383,7 @@
               </tr>
               <tr th:if="${obatList.isEmpty()}">
                 <td
-                  colspan="13"
+                  colspan="16"
                   style="
                     text-align: center;
                     color: var(--text-muted);
@@ -302,6 +405,12 @@
             2,
           );
         }
+        function toggleTempo() {
+          var m = document.getElementById("metodePembayaran").value;
+          document.getElementById("tempoGroup").style.display =
+            m === "TEMPO" ? "block" : "none";
+        }
+        toggleTempo();
       </script>
     </div>
   </body>

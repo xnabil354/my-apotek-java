@@ -54,6 +54,18 @@ public class Obat {
 
     private String golongan;
 
+    @Column(name = "diskon_persen")
+    private Double diskonPersen;
+
+    @Column(name = "metode_pembayaran")
+    private String metodePembayaran;
+
+    @Column(name = "jatuh_tempo")
+    private Integer jatuhTempo;
+
+    @Column(name = "jenis_faktur")
+    private String jenisFaktur;
+
     @Column(name = "indikasi", length = 1000)
     private String indikasi;
 
